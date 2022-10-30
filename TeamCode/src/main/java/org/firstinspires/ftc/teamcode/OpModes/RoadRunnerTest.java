@@ -3,10 +3,12 @@ package org.firstinspires.ftc.teamcode.OpModes;
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
+import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDrive;
 
+@Autonomous
 public class RoadRunnerTest extends LinearOpMode {
 
   public void runOpMode() {
@@ -14,7 +16,7 @@ public class RoadRunnerTest extends LinearOpMode {
 
     //Makes the path for the robot to follow
     //.splineTo(new Vector2d(xCord, yCord), rotation)
-    Trajectory autoTrajectory = drive.trajectoryBuilder(new Pose2d(-3, 6, Math.toRadians(90)))
+    Trajectory autoTrajectory = drive.trajectoryBuilder(new Pose2d(-36, 72, Math.toRadians(90)))
         //Step 1: Drop off cone at low juction
         .splineTo(new Vector2d(-36, 48), 0)
         //Step 2: Pick up detection cone and drop it off at medium junction
