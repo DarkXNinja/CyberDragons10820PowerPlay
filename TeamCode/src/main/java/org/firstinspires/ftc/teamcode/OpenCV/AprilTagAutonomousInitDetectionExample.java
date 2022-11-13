@@ -165,13 +165,14 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
 
             //trajectory
 
+
         } else if(tagOfInterest.id == MIDDLE){
 
             //trajectory
 
-        } else{
+        } else {
 
-            //trajectory
+            // right trajectory
         }
 
 
