@@ -8,7 +8,9 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDrive;
 
 @Autonomous
@@ -18,6 +20,9 @@ public class RoadRunnerTest extends LinearOpMode {
     SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
     CRServo grabberServo;
     DcMotorEx linearSlide;
+    ElapsedTime timer = new ElapsedTime();
+
+
 
     grabberServo = hardwareMap.get(CRServo.class, "grabber");
     linearSlide = hardwareMap.get(DcMotorEx.class, "linearSlide");
@@ -25,6 +30,8 @@ public class RoadRunnerTest extends LinearOpMode {
     //Starting the robot at the bottom left (blue auto)
     Pose2d startPose = new Pose2d(-36,72,Math.toRadians(270));
     drive.setPoseEstimate(startPose);
+
+    double slowerVelocity = 24.0;
 
 
     waitForStart();
@@ -44,16 +51,55 @@ public class RoadRunnerTest extends LinearOpMode {
             .build();
 
     Trajectory autoTrajectory2 = drive.trajectoryBuilder(autoTrajectory1.end())
-            .lineToLinearHeading(new Pose2d(-36, 72, Math.toRadians(270)))
-            //.back(6.0)
+            //.lineToLinearHeading(new Pose2d(-34, 57, Math.toRadians(270)))
+            .back(6.0)
             .build();
 
-    Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory2.end())
+    Trajectory autoTrajectory5 = drive.trajectoryBuilder(autoTrajectory2.end())
+            .strafeRight(3.0)
+            .build();
+
+      Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory5.end().plus(new Pose2d(0,0,Math.toRadians(90))))
             //.lineToLinearHeading(new Pose2d(-34,58, Math.toRadians(270)))
-            .forward(24.0)
+            .forward(9.0)
+            .addDisplacementMarker(() -> {
+                // Run your action in here!
+                grabberServo.setPower(-1.0);
+            })
             .build();
 
-    Trajectory autoTrajectory = drive.trajectoryBuilder(startPose)
+      Trajectory autoTrajectory4 = drive.trajectoryBuilder(autoTrajectory3.end())
+              .lineToLinearHeading(new Pose2d(-36, 28, Math.toRadians(360)),
+                      SampleMecanumDrive.getVelocityConstraint(slowerVelocity, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                      SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+              )
+              .addDisplacementMarker(() -> {
+                  // Run your action in here!
+                  grabberServo.setPower(1.0);
+              })
+              .build();
+
+      Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory4.end().plus(new Pose2d(0,0,Math.toRadians(180))))
+              .strafeLeft(6.0)
+              .build();
+
+      Trajectory autoTrajectory7 = drive.trajectoryBuilder(autoTrajectory6.end())
+              .lineTo(new Vector2d(-66, 12))
+              .addTemporalMarker(0, () -> {
+
+                  timer.reset();
+                  linearSlide.setPower(-1.0);
+                  while  (timer.milliseconds() < 2500.0) {
+
+                  }
+                  linearSlide.setPower(0);
+
+
+              })
+              .build();
+
+
+      Trajectory autoTrajectory = drive.trajectoryBuilder(startPose)
 
             //step 1 go to ground junction
             .splineTo(new Vector2d(-40.0, 54.0), Math.toRadians(180.0))
@@ -83,7 +129,26 @@ public class RoadRunnerTest extends LinearOpMode {
             .build();
 
 
-    drive.followTrajectory(autoTrajectory);
+    drive.followTrajectory(autoTrajectory1);
+    Thread.sleep(1500);
+    drive.followTrajectory(autoTrajectory2);
+    drive.followTrajectory(autoTrajectory5);
+    drive.turn(Math.toRadians(90));
+    drive.followTrajectory(autoTrajectory3);
+    Thread.sleep(500);
+    linearSlide.setPower(1.0);
+    Thread.sleep(5250);
+    linearSlide.setPower(0);
+    //drive.turn(Math.toRadians(45));
+    drive.followTrajectory(autoTrajectory4);
+    Thread.sleep(1500);
+    drive.turn(Math.toRadians(180));
+    drive.followTrajectory(autoTrajectory6);
+    //drive.followTrajectory(autoTrajectory7);
+    //linearSlide.setPower(-1.0);
+    //Thread.sleep(5500);
+    //linearSlide.setPower(0);
+
 
 
   }
