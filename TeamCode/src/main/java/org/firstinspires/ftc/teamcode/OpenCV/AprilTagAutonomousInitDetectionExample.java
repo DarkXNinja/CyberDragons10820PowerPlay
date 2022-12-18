@@ -21,12 +21,18 @@
 
 package org.firstinspires.ftc.teamcode.OpenCV;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.teamcode.OpModes.PowerPlayTeleOp;
+import org.firstinspires.ftc.teamcode.OpModes.RoadRunnerTest;
 import org.firstinspires.ftc.teamcode.OpenCV.AprilTagDetectionPipeline;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDrive;
 import org.openftc.apriltag.AprilTagDetection;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
@@ -62,12 +68,21 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
 
     AprilTagDetection tagOfInterest = null;
 
+
+    //Starting the robot at the bottom left (blue auto)
+    Pose2d startPose = new Pose2d(-36,72,Math.toRadians(270));
+
+    double slowerVelocity = 24.0;
+
+
     @Override
-    public void runOpMode() {
+    public void runOpMode() throws InterruptedException {
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
+
+        RoadRunnerTest trajectories = new RoadRunnerTest();
 
         camera.setPipeline(aprilTagDetectionPipeline);
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener() {
@@ -173,11 +188,10 @@ public class AprilTagAutonomousInitDetectionExample extends LinearOpMode {
         } else {
 
             // right trajectory
+
         }
 
 
-        /* You wouldn't have this in your autonomous, this is just to prevent the sample from ending */
-        while (opModeIsActive()) {sleep(20);}
     }
 
     void tagToTelemetry(AprilTagDetection detection)

@@ -17,8 +17,11 @@ public class PowerPlayTeleOp extends LinearOpMode {
     public DcMotorEx frontLeft;
     public DcMotorEx backLeft;
 
-    public DcMotorEx linearSlide;
+    public DcMotorEx lift1;
+    public DcMotorEx lift2;
+
     public CRServo grabberServo;
+    public CRServo rotationServo;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -42,10 +45,15 @@ public class PowerPlayTeleOp extends LinearOpMode {
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        linearSlide = hardwareMap.get(DcMotorEx.class, "linearSlide");
+        lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
+        lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
+
+        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         //initialize servo
-        grabberServo = hardwareMap.get(CRServo.class, "grabber");
+        grabberServo = hardwareMap.get(CRServo.class, "Grabber");
+        rotationServo = hardwareMap.get(CRServo.class, "RotationServo");
 
         waitForStart();
 
@@ -69,8 +77,10 @@ public class PowerPlayTeleOp extends LinearOpMode {
             frontRight.setPower(frontRightPower * 0.75);
             backRight.setPower(backRightPower * 0.75);
 
+            lift1.setPower(gamepad2.left_stick_y * 0.5);
+            lift2.setPower(gamepad2.left_stick_y * 0.5);
 
-            linearSlide.setPower(-gamepad2.left_stick_y);
+            rotationServo.setPower(gamepad2.right_stick_y);
 
             if (gamepad2.x) {
                 grabberServo.setPower(1.0) ;
@@ -79,6 +89,9 @@ public class PowerPlayTeleOp extends LinearOpMode {
             if (gamepad2.y) {
                 grabberServo.setPower(-1.0) ;
             }
+
+           
+
 
 
         }
