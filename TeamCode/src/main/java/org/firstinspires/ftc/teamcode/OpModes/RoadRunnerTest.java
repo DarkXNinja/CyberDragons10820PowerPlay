@@ -519,7 +519,7 @@ public class RoadRunnerTest extends LinearOpMode {
         .splineTo(new Vector2d(-36, 24), 0)
         //Step 3: Pick up and drop off cones at the low junction by the cone station (x3)
         .splineTo(new Vector2d(-60, 12), 180)
-        .splineTo(new Vector2d(-48, 12), -90)
+        .splineTo(new Vector 2d(-48, 12), -90)
         .splineTo(new Vector2d(-60, 12), 180)
         .splineTo(new Vector2d(-48, 12), -90)
         .splineTo(new Vector2d(-60, 12), 180)

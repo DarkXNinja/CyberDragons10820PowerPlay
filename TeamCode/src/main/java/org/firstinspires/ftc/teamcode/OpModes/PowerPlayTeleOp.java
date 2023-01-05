@@ -77,8 +77,9 @@ public class PowerPlayTeleOp extends LinearOpMode {
             frontRight.setPower(frontRightPower * 0.75);
             backRight.setPower(backRightPower * 0.75);
 
-            lift1.setPower(gamepad2.left_stick_y * 0.5);
-            lift2.setPower(gamepad2.left_stick_y * 0.5);
+
+            lift1.setPower(gamepad2.left_stick_y * 0.75);
+            lift2.setPower(gamepad2.left_stick_y * 0.75);
 
             rotationServo.setPower(gamepad2.right_stick_y);
 
