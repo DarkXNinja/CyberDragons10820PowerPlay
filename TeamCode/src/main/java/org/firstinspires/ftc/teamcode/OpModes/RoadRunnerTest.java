@@ -176,15 +176,11 @@ public class RoadRunnerTest extends LinearOpMode {
             //Step 1: Drop off cone at low junction
             //.forward(24.0)
             .lineToLinearHeading(new Pose2d(-40, 54, Math.toRadians(180)))
-            .addDisplacementMarker(() -> {
-              // Run your action in here!
-              //grabberServo.setPower(1.0);
-            })
             .build();
 
     Trajectory autoTrajectory2 = drive.trajectoryBuilder(autoTrajectory1.end())
             //.lineToLinearHeading(new Pose2d(-34, 57, Math.toRadians(270)))
-            .back(6.0)
+            .back(3.0)
             .build();
 
     Trajectory autoTrajectory5 = drive.trajectoryBuilder(autoTrajectory2.end())
@@ -194,10 +190,6 @@ public class RoadRunnerTest extends LinearOpMode {
     Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory5.end().plus(new Pose2d(0,0,Math.toRadians(90))))
             //.lineToLinearHeading(new Pose2d(-34,58, Math.toRadians(270)))
             .forward(9.0)
-            .addDisplacementMarker(() -> {
-              // Run your action in here!
-              //grabberServo.setPower(-1.0);
-            })
             .build();
 
     Trajectory autoTrajectory4 = drive.trajectoryBuilder(autoTrajectory3.end())
@@ -205,29 +197,22 @@ public class RoadRunnerTest extends LinearOpMode {
                     SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                     SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
             )
-            .addDisplacementMarker(() -> {
-              // Run your action in here!
-              //grabberServo.setPower(1.0);
-            })
             .build();
 
-    Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory4.end().plus(new Pose2d(0,0,Math.toRadians(180))))
-            .strafeLeft(8.0)
+    Trajectory autoTrajectory11 = drive.trajectoryBuilder(autoTrajectory4.end())
+            .forward(3.0)
             .build();
 
-    Trajectory autoTrajectory7 = drive.trajectoryBuilder(autoTrajectory6.end())
-            .lineTo(new Vector2d(-66, 12))
-            .addTemporalMarker(0, () -> {
+    Trajectory autoTrajectory12 = drive.trajectoryBuilder(autoTrajectory11.end())
+            .back(3.0)
+            .build();
 
-              //timer.reset();
-              //linearSlide.setPower(-1.0);
-              //while  (timer.milliseconds() < 2500.0) {
+    Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory12.end())
+            .strafeRight(12.0)
+            .build();
 
-              //}
-              //linearSlide.setPower(0);
-
-
-            })
+    Trajectory autoTrajectory7 = drive.trajectoryBuilder(autoTrajectory6.end().plus(new Pose2d(0,0,Math.toRadians(180))))
+            .lineTo(new Vector2d(-63, 12))
             .build();
 
     Trajectory autoTrajectory8 = drive.trajectoryBuilder(autoTrajectory7.end().plus(new Pose2d(0,0,Math.toRadians(180))))
@@ -241,6 +226,8 @@ public class RoadRunnerTest extends LinearOpMode {
     Trajectory autoTrajectory10 = drive.trajectoryBuilder(autoTrajectory9.end())
             .strafeLeft(16.0)
             .build();
+
+
 
     // before moving to ground junction, lift the gripper slightly
     moveLiftToPosition(-250);
@@ -258,7 +245,7 @@ public class RoadRunnerTest extends LinearOpMode {
             autoTrajectory5);
     drive.turn(Math.toRadians(90));
     //moving the gripper back to original position
-    moveLiftToPosition(-50);
+    moveLiftToPosition(0);
     drive.followTrajectory(
             // grabs detection cone
             autoTrajectory3);
@@ -268,27 +255,43 @@ public class RoadRunnerTest extends LinearOpMode {
     drive.followTrajectory(
             // goes to mid junction and drops cone
             autoTrajectory4);
-    //move gripper to medium junction height
+
+    //move linear slide to medium junction height
     moveLiftToPosition(-5150);
+    drive.followTrajectory(
+            // goes forward
+            autoTrajectory11);
+
     //open gripper
     gripper.setPosition(0);
     Thread.sleep(500);
 
-    drive.turn(Math.toRadians(180));
+    drive.followTrajectory(
+            // goes backward to clear junction
+            autoTrajectory12);
+
+
     Thread.sleep(250);
     drive.followTrajectory(
-            // strafes left
+            // strafes right
             autoTrajectory6);
+    drive.turn(Math.toRadians(180));
     //move lift to height of top cone on stack
-    moveLiftToPosition(-2300);
+    moveLiftToPosition(-1375);
     drive.followTrajectory(
             // goes to stack of cones
             autoTrajectory7);
+
+
     //close gripper
     gripper.setPosition(1);
+    Thread.sleep(500);
+
     //move lift up as to not knock down the rest of the cones
     //move to medium junction height
-    moveLiftToPosition(-5150);
+    moveLiftToPosition(-2500);
+
+
     drive.turn(Math.toRadians(180));
     drive.followTrajectory(
             // moves forward 12 inches
@@ -296,6 +299,8 @@ public class RoadRunnerTest extends LinearOpMode {
     drive.followTrajectory(
             // goes to mid junction round 2
             autoTrajectory9);
+
+    /*
     //open gripper
     gripper.setPosition(0);
 
@@ -303,7 +308,7 @@ public class RoadRunnerTest extends LinearOpMode {
             // goes to zone 2
             autoTrajectory10);
 
-    /* Actually do something useful */
+    // Actually do something useful
     if (tagOfInterest == null || tagOfInterest.id == LEFT) {
 
       //trajectory
@@ -327,7 +332,7 @@ public class RoadRunnerTest extends LinearOpMode {
       // right trajectory
     }
 
-
+    */
 
   }
 
@@ -480,7 +485,7 @@ public class RoadRunnerTest extends LinearOpMode {
 
   void moveLiftToPosition(int pos) {
     int tposition = pos;
-    final int ttolerance = 50;
+    final int ttolerance = 25;
     int thigher = tposition - ttolerance;
     int tlower = tposition + ttolerance;
 

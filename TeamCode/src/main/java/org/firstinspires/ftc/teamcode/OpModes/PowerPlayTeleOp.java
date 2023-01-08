@@ -1,12 +1,15 @@
-package org.firstinspires.ftc.teamcode.OpModes;
+package org.firstinspires.ftc.teamcode;
 
-import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.TouchSensor;
+import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 @TeleOp
 public class PowerPlayTeleOp extends LinearOpMode {
@@ -17,16 +20,23 @@ public class PowerPlayTeleOp extends LinearOpMode {
     public DcMotorEx frontLeft;
     public DcMotorEx backLeft;
 
-    public DcMotorEx lift1;
-    public DcMotorEx lift2;
+    private DcMotorEx lift1;
+    private DcMotorEx lift2;
+    private Servo grabberservo;
+    private CRServo gripperrotator;
 
-    public CRServo grabberServo;
-    public CRServo rotationServo;
+    private DistanceSensor gripperHeight;
+    private TouchSensor magTouch;
+
+    ElapsedTime durationTimer = new ElapsedTime();
 
     @Override
     public void runOpMode() throws InterruptedException {
 
+        telemetry.addLine("reached");
+        telemetry.update();
 
+        // setting up drive train
         frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
         frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
         backRight = hardwareMap.get(DcMotorEx.class, "backRight");
@@ -45,20 +55,39 @@ public class PowerPlayTeleOp extends LinearOpMode {
         frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
+
+        // setting up the rest
         lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
         lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
 
-        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        //initialize servo
-        grabberServo = hardwareMap.get(CRServo.class, "Grabber");
-        rotationServo = hardwareMap.get(CRServo.class, "RotationServo");
+        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+        //lift1.setTargetPosition(0);
+        //lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+
+        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+        //lift2.setTargetPosition(0);
+        //lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        grabberservo = hardwareMap.get(Servo.class, "GrabberServo");
+        grabberservo.setPosition(1);
+        gripperrotator = hardwareMap.get(CRServo.class, "GripperRotator");
+
+        gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
+        magTouch = hardwareMap.get(TouchSensor.class, "touch");
 
         waitForStart();
 
+        durationTimer.reset();
+
         while (opModeIsActive()) {
 
+            // for the drive train
             double y = gamepad1.left_stick_y; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
             double rx = -gamepad1.right_stick_x;
@@ -72,31 +101,184 @@ public class PowerPlayTeleOp extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower * 0.75);
-            backLeft.setPower(backLeftPower * 0.75);
-            frontRight.setPower(frontRightPower * 0.75);
-            backRight.setPower(backRightPower * 0.75);
+            frontLeft.setPower(frontLeftPower * 0.6);
+            backLeft.setPower(backLeftPower * 0.6);
+            frontRight.setPower(frontRightPower * 0.6);
+            backRight.setPower(backRightPower * 0.6);
 
 
-            lift1.setPower(gamepad2.left_stick_y * 0.75);
-            lift2.setPower(gamepad2.left_stick_y * 0.75);
+            // for the rest
+            lift1.setPower(gamepad2.left_stick_y);
+            lift2.setPower(gamepad2.left_stick_y);
 
-            rotationServo.setPower(gamepad2.right_stick_y);
-
-            if (gamepad2.x) {
-                grabberServo.setPower(1.0) ;
+            if(gamepad2.x) {
+                grabberservo.setPosition(1);
+            }
+            if(gamepad2.y) {
+                grabberservo.setPosition(0);
             }
 
-            if (gamepad2.y) {
-                grabberServo.setPower(-1.0) ;
+            if(gamepad2.dpad_left) {
+                gripperrotator.setPower(1.0*0.5);
+            } else {
+                if(gamepad2.dpad_right) {
+                    gripperrotator.setPower(-1.0*0.5);
+                } else {
+                    gripperrotator.setPower(0.0);
+                }
             }
 
-           
+            if (durationTimer.milliseconds() > 1000) {
+                telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
+                if (magTouch.isPressed()) {
+                    telemetry.addLine("Touch: " + "YES");
+                } else {
+                    telemetry.addLine("Touch: " + "NO");
+                }
+                telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
+                telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
+                telemetry.update();
+                // reset timer
+                durationTimer.reset();
+            }
 
+			/*
+			if (gamepad2.a) {
 
+				int tposition = -3150 ;
+				int ttolerance = 50 ;
 
+				int thigher = tposition - ttolerance ;
+				int tlower = tposition + ttolerance ;
+
+				lift1.setTargetPosition(tposition);
+				lift1.setTargetPositionTolerance(ttolerance);
+				lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift2.setTargetPosition(tposition);
+				lift2.setTargetPositionTolerance(ttolerance);
+				lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift1.setPower(0.5) ;
+				lift2.setPower(0.5) ;
+
+				while (true) {
+					int lift1position = lift1.getCurrentPosition() ;
+					int lift2position = lift2.getCurrentPosition() ;
+
+					if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+								 ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+					   lift1.setPower(0.0) ;
+					   lift2.setPower(0.0) ;
+					   break ;
+					}
+				}
+
+			}
+
+			if (gamepad2.b) {
+
+				int tposition = -5150 ;
+				int ttolerance = 50 ;
+
+				int thigher = tposition - ttolerance ;
+				int tlower = tposition + ttolerance ;
+
+				lift1.setTargetPosition(tposition);
+				lift1.setTargetPositionTolerance(ttolerance);
+				lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift2.setTargetPosition(tposition);
+				lift2.setTargetPositionTolerance(ttolerance);
+				lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift1.setPower(0.5) ;
+				lift2.setPower(0.5) ;
+
+				while (true) {
+					int lift1position = lift1.getCurrentPosition() ;
+					int lift2position = lift2.getCurrentPosition() ;
+
+					if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+								 ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+					   lift1.setPower(0.0) ;
+					   lift2.setPower(0.0) ;
+					   break ;
+					}
+				}
+
+			}
+
+			if (gamepad1.a) {
+
+				int tposition = -7150 ;
+				int ttolerance = 50 ;
+
+				int thigher = tposition - ttolerance ;
+				int tlower = tposition + ttolerance ;
+
+				lift1.setTargetPosition(tposition);
+				lift1.setTargetPositionTolerance(ttolerance);
+				lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift2.setTargetPosition(tposition);
+				lift2.setTargetPositionTolerance(ttolerance);
+				lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift1.setPower(0.5) ;
+				lift2.setPower(0.5) ;
+
+				while (true) {
+					int lift1position = lift1.getCurrentPosition() ;
+					int lift2position = lift2.getCurrentPosition() ;
+
+					if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+								 ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+					   lift1.setPower(0.0) ;
+					   lift2.setPower(0.0) ;
+					   break ;
+					}
+				}
+
+			}
+
+			if (gamepad1.b) {
+
+				int tposition = -50 ;
+				int ttolerance = 50 ;
+
+				int thigher = tposition - ttolerance ;
+				int tlower = tposition + ttolerance ;
+
+				lift1.setTargetPosition(tposition);
+				lift1.setTargetPositionTolerance(ttolerance);
+				lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift2.setTargetPosition(tposition);
+				lift2.setTargetPositionTolerance(ttolerance);
+				lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+				lift1.setPower(0.5) ;
+				lift2.setPower(0.5) ;
+
+				while (true) {
+					int lift1position = lift1.getCurrentPosition() ;
+					int lift2position = lift2.getCurrentPosition() ;
+
+					if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+								 ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+					   lift1.setPower(0.0) ;
+					   lift2.setPower(0.0) ;
+					   break ;
+					}
+				}
+
+			}
+			*/
         }
-
-
     }
 }
