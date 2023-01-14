@@ -16,7 +16,6 @@ public class MecanumClass extends DrivetrainClass {
 
     HardwareMap hardwareMap;
 
-
     // all of these methods are extended from the abstract drivetrain class
     @Override
     void initialize() {
@@ -26,7 +25,6 @@ public class MecanumClass extends DrivetrainClass {
         backRight = hardwareMap.get(DcMotorEx.class, "BackRight");
 
     }
-
 
     // time + speed are parameters for all the movement
     @Override

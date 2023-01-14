@@ -30,6 +30,8 @@ public class PowerPlayTeleOp extends LinearOpMode {
 
     ElapsedTime durationTimer = new ElapsedTime();
 
+    private String gripperPosition;
+
     @Override
     public void runOpMode() throws InterruptedException {
 
@@ -50,10 +52,10 @@ public class PowerPlayTeleOp extends LinearOpMode {
         frontRight.setDirection(DcMotorEx.Direction.REVERSE);
         backRight.setDirection(DcMotorEx.Direction.REVERSE);
 
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         // setting up the rest
@@ -81,6 +83,11 @@ public class PowerPlayTeleOp extends LinearOpMode {
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         magTouch = hardwareMap.get(TouchSensor.class, "touch");
 
+        if (magTouch.isPressed()) {
+            gripperPosition = "center";
+
+        }
+
         waitForStart();
 
         durationTimer.reset();
@@ -101,15 +108,24 @@ public class PowerPlayTeleOp extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower * 0.6);
-            backLeft.setPower(backLeftPower * 0.6);
-            frontRight.setPower(frontRightPower * 0.6);
-            backRight.setPower(backRightPower * 0.6);
+            frontLeft.setPower(frontLeftPower * 0.5);
+            backLeft.setPower(backLeftPower * 0.5);
+            frontRight.setPower(frontRightPower * 0.5);
+            backRight.setPower(backRightPower * 0.5);
 
 
             // for the rest
-            lift1.setPower(gamepad2.left_stick_y);
-            lift2.setPower(gamepad2.left_stick_y);
+            if (gripperHeight.getDistance(DistanceUnit.INCH) > 1) {
+
+                lift1.setPower(gamepad2.left_stick_y);
+                lift2.setPower(gamepad2.left_stick_y);
+
+            } else {
+
+                lift1.setPower(0);
+                lift2.setPower(0);
+
+            }
 
             if(gamepad2.x) {
                 grabberservo.setPosition(1);
@@ -118,15 +134,50 @@ public class PowerPlayTeleOp extends LinearOpMode {
                 grabberservo.setPosition(0);
             }
 
-            if(gamepad2.dpad_left) {
+            if (gamepad2.dpad_right) {
+
                 gripperrotator.setPower(1.0*0.5);
+                gripperPosition = "right";
+
+            } else if (gamepad2.dpad_left) {
+
+                gripperrotator.setPower(-1.0 * 0.5);
+                gripperPosition = "left";
+
             } else {
-                if(gamepad2.dpad_right) {
-                    gripperrotator.setPower(-1.0*0.5);
-                } else {
-                    gripperrotator.setPower(0.0);
-                }
+
+                gripperrotator.setPower(0.0);
+
             }
+
+            // centering automation for gripper
+            if (gamepad2.dpad_down) {
+
+                if (gripperPosition == "center") {
+
+                    gripperrotator.setPower(0.0);
+
+                } else if (gripperPosition == "right") {
+
+                    gripperrotator.setPower(-1.0 * 0.5);
+                    while (!magTouch.isPressed()) {
+
+                    }
+                    gripperrotator.setPower(0.0);
+
+                } else if (gripperPosition == "left") {
+
+                    gripperrotator.setPower(1.0*0.5);
+                    while (!magTouch.isPressed()) {
+
+                    }
+                    gripperrotator.setPower(0.0);
+
+                }
+
+            }
+
+
 
             if (durationTimer.milliseconds() > 1000) {
                 telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
