@@ -226,9 +226,15 @@ public class PowerPlayTeleOp extends LinearOpMode {
             if (gamepad2.a) {
               moveLiftToPosition(-3300);
             }
+
+            // need to change
+            /*
             if (gamepad2.b){
+
               moveLiftToPosition(-7500);
             }
+            */
+
 			/*
 			if (gamepad2.a) {
 
