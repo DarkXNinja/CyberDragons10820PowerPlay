@@ -24,9 +24,11 @@ public class PowerPlayTeleOp extends LinearOpMode {
     private DcMotorEx lift2;
     private Servo grabberservo;
     private CRServo gripperrotator;
+    private CRServo gripperfolder;
 
     private DistanceSensor gripperHeight;
     private TouchSensor magTouch;
+    private DistanceSensor junctionDistance;
 
     ElapsedTime durationTimer = new ElapsedTime();
 
@@ -79,9 +81,11 @@ public class PowerPlayTeleOp extends LinearOpMode {
         grabberservo = hardwareMap.get(Servo.class, "GrabberServo");
         grabberservo.setPosition(1);
         gripperrotator = hardwareMap.get(CRServo.class, "GripperRotator");
+        gripperfolder = hardwareMap.get(CRServo.class, "GripperFolder");
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         magTouch = hardwareMap.get(TouchSensor.class, "touch");
+        junctionDistance = hardwareMap.get(DistanceSensor.class, "junctionDistance");
 
         if (magTouch.isPressed()) {
             gripperPosition = "center";
@@ -149,7 +153,7 @@ public class PowerPlayTeleOp extends LinearOpMode {
                 gripperrotator.setPower(0.0);
 
             }
-
+            /*
             // centering automation for gripper
             if (gamepad2.dpad_down) {
 
@@ -178,9 +182,27 @@ public class PowerPlayTeleOp extends LinearOpMode {
             }
 
 
+             */
+
+            if (gamepad2.dpad_up) {
+
+                gripperfolder.setPower(-1.0);
+
+            } else if (gamepad2.dpad_down) {
+
+                gripperfolder.setPower(1.0);
+
+            } else {
+
+                gripperfolder.setPower(0.0);
+
+            }
+
 
             if (durationTimer.milliseconds() > 1000) {
                 telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
+                telemetry.addLine("junction distance: " + junctionDistance.getDistance(DistanceUnit.INCH));
+
                 if (magTouch.isPressed()) {
                     telemetry.addLine("Touch: " + "YES");
                 } else {
@@ -192,6 +214,8 @@ public class PowerPlayTeleOp extends LinearOpMode {
                 // reset timer
                 durationTimer.reset();
             }
+
+
 
 			/*
 			if (gamepad2.a) {
