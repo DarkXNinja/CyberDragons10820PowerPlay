@@ -192,7 +192,18 @@ public class PowerPlayTeleOp extends LinearOpMode {
                 // reset timer
                 durationTimer.reset();
             }
-
+            //Needs values
+            /*
+            A = low
+            B = High
+            The lower one on the controller is lower and the higher is high
+            */
+            if (gamepad2.a) {
+              moveLiftToPosition(-3300);
+            }
+            if (gamepad2.b){
+              moveLiftToPosition(-17500);
+            }
 			/*
 			if (gamepad2.a) {
 
@@ -331,5 +342,36 @@ public class PowerPlayTeleOp extends LinearOpMode {
 			}
 			*/
         }
+    }
+
+    void moveLiftToPosition(int pos) {
+      int tposition = pos;
+      final int ttolerance = 25;
+      int thigher = tposition - ttolerance;
+      int tlower = tposition + ttolerance;
+
+      lift1.setTargetPosition(tposition);
+      lift1.setTargetPositionTolerance(ttolerance);
+      lift2.setTargetPosition(tposition);
+      lift2.setTargetPositionTolerance(ttolerance);
+
+      lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+      lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+      lift1.setPower(1.0);
+      lift2.setPower(1.0);
+
+      while (true) {
+        int lift1position = lift1.getCurrentPosition();
+        int lift2position = lift2.getCurrentPosition();
+
+        if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+                ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+          lift1.setPower(0.0);
+          lift2.setPower(0.0);
+          break;
+        }
+      }
     }
 }
