@@ -221,19 +221,17 @@ public class PowerPlayTeleOp extends LinearOpMode {
             /*
             A = low
             B = High
+            High = -6600
+            Medium = -3000
+            Low = -1800
             The lower one on the controller is lower and the higher is high
             */
             if (gamepad2.a) {
-              moveLiftToPosition(-3300);
+              moveLiftToPosition(-1800);
             }
-
-            // need to change
-            /*
             if (gamepad2.b){
-
-              moveLiftToPosition(-7500);
+              moveLiftToPosition(-6600);
             }
-            */
 
 			/*
 			if (gamepad2.a) {
