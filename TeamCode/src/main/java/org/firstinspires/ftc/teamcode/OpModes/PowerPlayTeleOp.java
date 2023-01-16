@@ -23,16 +23,15 @@ public class PowerPlayTeleOp extends LinearOpMode {
     private DcMotorEx lift1;
     private DcMotorEx lift2;
     private Servo grabberservo;
-    private CRServo gripperrotator;
     private CRServo gripperfolder;
 
     private DistanceSensor gripperHeight;
-    private TouchSensor magTouch;
-    private DistanceSensor junctionDistance;
+    private DistanceSensor rightPole;
+    private DistanceSensor leftPole;
 
     ElapsedTime durationTimer = new ElapsedTime();
 
-    private String gripperPosition;
+    //private String gripperPosition;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -80,17 +79,11 @@ public class PowerPlayTeleOp extends LinearOpMode {
 
         grabberservo = hardwareMap.get(Servo.class, "GrabberServo");
         grabberservo.setPosition(1);
-        gripperrotator = hardwareMap.get(CRServo.class, "GripperRotator");
         gripperfolder = hardwareMap.get(CRServo.class, "GripperFolder");
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
-        magTouch = hardwareMap.get(TouchSensor.class, "touch");
-        junctionDistance = hardwareMap.get(DistanceSensor.class, "junctionDistance");
-
-        if (magTouch.isPressed()) {
-            gripperPosition = "center";
-
-        }
+        rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
+        leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
         waitForStart();
 
@@ -119,7 +112,7 @@ public class PowerPlayTeleOp extends LinearOpMode {
 
 
             // for the rest
-            if (gripperHeight.getDistance(DistanceUnit.INCH) > 1) {
+            if (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
 
                 lift1.setPower(gamepad2.left_stick_y);
                 lift2.setPower(gamepad2.left_stick_y);
@@ -138,52 +131,6 @@ public class PowerPlayTeleOp extends LinearOpMode {
                 grabberservo.setPosition(0);
             }
 
-            if (gamepad2.dpad_right) {
-
-                gripperrotator.setPower(1.0*0.5);
-                gripperPosition = "right";
-
-            } else if (gamepad2.dpad_left) {
-
-                gripperrotator.setPower(-1.0 * 0.5);
-                gripperPosition = "left";
-
-            } else {
-
-                gripperrotator.setPower(0.0);
-
-            }
-            /*
-            // centering automation for gripper
-            if (gamepad2.dpad_down) {
-
-                if (gripperPosition == "center") {
-
-                    gripperrotator.setPower(0.0);
-
-                } else if (gripperPosition == "right") {
-
-                    gripperrotator.setPower(-1.0 * 0.5);
-                    while (!magTouch.isPressed()) {
-
-                    }
-                    gripperrotator.setPower(0.0);
-
-                } else if (gripperPosition == "left") {
-
-                    gripperrotator.setPower(1.0*0.5);
-                    while (!magTouch.isPressed()) {
-
-                    }
-                    gripperrotator.setPower(0.0);
-
-                }
-
-            }
-
-
-             */
-
             if (gamepad2.dpad_up) {
 
                 gripperfolder.setPower(-1.0);
@@ -201,13 +148,9 @@ public class PowerPlayTeleOp extends LinearOpMode {
 
             if (durationTimer.milliseconds() > 1000) {
                 telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
-                telemetry.addLine("junction distance: " + junctionDistance.getDistance(DistanceUnit.INCH));
+                telemetry.addLine("pole distance left: " + leftPole.getDistance(DistanceUnit.INCH));
+                telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
 
-                if (magTouch.isPressed()) {
-                    telemetry.addLine("Touch: " + "YES");
-                } else {
-                    telemetry.addLine("Touch: " + "NO");
-                }
                 telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
                 telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
                 telemetry.update();

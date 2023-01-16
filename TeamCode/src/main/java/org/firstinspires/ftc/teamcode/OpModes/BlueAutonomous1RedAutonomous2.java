@@ -36,6 +36,8 @@ public class BlueAutonomous1RedAutonomous2 extends LinearOpMode {
 
   static final double FEET_PER_METER = 3.28084;
 
+  final int ttolerance = 25;
+
   // Lens intrinsics
   // UNITS ARE PIXELS
   // NOTE: this calibration is for the C920 webcam at 800x448.
@@ -61,10 +63,11 @@ public class BlueAutonomous1RedAutonomous2 extends LinearOpMode {
   DcMotorEx lift2;
 
   Servo gripper;
-  CRServo rotator;
+  private CRServo gripperfolder;
 
-  DistanceSensor heightSensor;
-  TouchSensor centeringSensor;
+  private DistanceSensor gripperHeight;
+  private DistanceSensor rightPole;
+  private DistanceSensor leftPole;
 
 
   @Override
@@ -466,23 +469,18 @@ public class BlueAutonomous1RedAutonomous2 extends LinearOpMode {
     gripper = hardwareMap.get(Servo.class, "GrabberServo");
     gripper.setPosition(1);
 
-    rotator = hardwareMap.get(CRServo.class, "GripperRotator");
+    gripperfolder = hardwareMap.get(CRServo.class, "GripperFolder");
 
-    heightSensor = hardwareMap.get(DistanceSensor.class, "gripperHeight");
+    gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
+    rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
+    leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
-    centeringSensor = hardwareMap.get(TouchSensor.class, "touch");
-
-    if ( centeringSensor.isPressed() == false ) {
-      telemetry.addLine("gripper is not centered");
-    } else {
-      telemetry.addLine("Robot Initialized");
-    }
+    telemetry.addLine("Robot Initialized");
     telemetry.update();
   }
 
   void moveLiftToPosition(int pos) {
     int tposition = pos;
-    final int ttolerance = 25;
     int thigher = tposition - ttolerance;
     int tlower = tposition + ttolerance;
 
@@ -503,6 +501,44 @@ public class BlueAutonomous1RedAutonomous2 extends LinearOpMode {
 
       if ( ((lift1position < tlower) && (lift1position > thigher)) ||
               ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+        lift1.setPower(0.0);
+        lift2.setPower(0.0);
+        break;
+      }
+    }
+  }
+
+  void moveLiftToPositionAsync(int pos) {
+    int tposition = pos;
+    int thigher = tposition - ttolerance;
+    int tlower = tposition + ttolerance;
+
+    lift1.setTargetPosition(tposition);
+    lift1.setTargetPositionTolerance(ttolerance);
+    lift2.setTargetPosition(tposition);
+    lift2.setTargetPositionTolerance(ttolerance);
+
+    lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+    lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+    lift1.setPower(1.0);
+    lift2.setPower(1.0);
+
+    // make sure you call checkListInPosition to make sure lift is in position
+  }
+
+  void checkLiftInPositionAsync(int pos) {
+    int tposition = pos;
+    int thigher = tposition - ttolerance;
+    int tlower = tposition + ttolerance;
+
+    while (true) {
+      int lift1position = lift1.getCurrentPosition();
+      int lift2position = lift2.getCurrentPosition();
+
+      if (((lift1position < tlower) && (lift1position > thigher)) ||
+              ((lift2position < tlower) && (lift2position > thigher))) {
 
         lift1.setPower(0.0);
         lift2.setPower(0.0);
