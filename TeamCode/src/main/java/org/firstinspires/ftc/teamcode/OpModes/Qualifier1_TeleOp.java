@@ -12,7 +12,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 @TeleOp
-public class PowerPlayTeleOp extends LinearOpMode {
+public class Qualifier1_TeleOp extends LinearOpMode {
 
     //drivetrain motors
     public DcMotorEx frontRight;
@@ -84,6 +84,8 @@ public class PowerPlayTeleOp extends LinearOpMode {
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
         leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
+
+
 
         waitForStart();
 
@@ -169,13 +171,17 @@ public class PowerPlayTeleOp extends LinearOpMode {
             Low = -1800
             The lower one on the controller is lower and the higher is high
             */
+
+            /*
             if (gamepad2.a) {
               moveLiftToPosition(-1800);
             }
+
+
             if (gamepad2.b){
               moveLiftToPosition(-6600);
             }
-
+            */
 			/*
 			if (gamepad2.a) {
 

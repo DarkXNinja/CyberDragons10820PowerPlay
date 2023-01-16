@@ -6,7 +6,6 @@ import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
-import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -27,15 +26,17 @@ import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 import java.util.ArrayList;
-@Disabled
+
 @Autonomous
-public class BlueAutonomous2RedAutonomous1 extends LinearOpMode {
+public class Qualifier1_RightAutonomous extends LinearOpMode {
 
 
     OpenCvCamera camera;
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
 
     static final double FEET_PER_METER = 3.28084;
+
+    final int ttolerance = 25;
 
     // Lens intrinsics
     // UNITS ARE PIXELS
@@ -61,11 +62,12 @@ public class BlueAutonomous2RedAutonomous1 extends LinearOpMode {
     DcMotorEx lift1;
     DcMotorEx lift2;
 
-    Servo gripper;
-    CRServo rotator;
+    private Servo gripper;
+    private CRServo gripperfolder;
 
-    DistanceSensor heightSensor;
-    TouchSensor centeringSensor;
+    private DistanceSensor gripperHeight;
+    private DistanceSensor rightPole;
+    private DistanceSensor leftPole;
 
 
     @Override
@@ -73,7 +75,7 @@ public class BlueAutonomous2RedAutonomous1 extends LinearOpMode {
 
         SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
         //Starting the robot at the bottom left (blue auto)
-        Pose2d startPose = new Pose2d(36, 72, Math.toRadians(270));
+        Pose2d startPose = new Pose2d(-36, 72, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
 
         double slowerVel = 24.0;
@@ -168,194 +170,102 @@ public class BlueAutonomous2RedAutonomous1 extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        //Makes the path for the robot to follow
-        //.splineTo(new Vector2d(xCord, yCord), rotation)
-        Trajectory autoTrajectory1 = drive.trajectoryBuilder(new Pose2d(36, 72, Math.toRadians(270)))
-                //Step 1: Drop off cone at low junction
-                //.forward(24.0)
-                .lineToLinearHeading(new Pose2d(40, 54, Math.toRadians(360)))
+        Trajectory autoTrajectory1 = drive.trajectoryBuilder(startPose)
+                .forward(3.0)
                 .build();
 
         Trajectory autoTrajectory2 = drive.trajectoryBuilder(autoTrajectory1.end())
-                //.lineToLinearHeading(new Pose2d(-34, 57, Math.toRadians(270)))
-                .back(5.0)
+                .strafeLeft(26.0)
                 .build();
 
-        Trajectory autoTrajectory5 = drive.trajectoryBuilder(autoTrajectory2.end())
-                .strafeLeft(3.0)
-                .build();
-
-
-        Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory5.end().plus(new Pose2d(0,0,Math.toRadians(-90))))
-                .lineToLinearHeading(new Pose2d(36,36, Math.toRadians(270)))
-                //.forward(9.0)
-                .build();
-
-        Trajectory autoTrajectory4 = drive.trajectoryBuilder(autoTrajectory3.end())
-                .lineToLinearHeading(new Pose2d(36, 28, Math.toRadians(180)),
+        Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory2.end())
+                .lineToLinearHeading(new Pose2d(-12, 28, Math.toRadians(360)),
                         SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
                 .build();
 
-        Trajectory autoTrajectory11 = drive.trajectoryBuilder(autoTrajectory4.end())
+        Trajectory autoTrajectory4 = drive.trajectoryBuilder(autoTrajectory3.end())
                 .forward(3.0)
                 .build();
 
-        Trajectory autoTrajectory12 = drive.trajectoryBuilder(autoTrajectory11.end())
+        Trajectory autoTrajectory5 = drive.trajectoryBuilder(autoTrajectory4.end())
                 .back(3.0)
                 .build();
 
-        Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory12.end())
-                .strafeLeft(12.0)
+        Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory5.end())
+                .strafeLeft(16.0)
                 .build();
 
-        Trajectory autoTrajectory7 = drive.trajectoryBuilder(autoTrajectory6.end().plus(new Pose2d(0,0,Math.toRadians(180))))
-                .lineTo(new Vector2d(63, 14))
-                .build();
-
-        Trajectory autoTrajectory8 = drive.trajectoryBuilder(autoTrajectory7.end())
-                .back(24.0)
-                .build();
-
-        Trajectory autoTrajectory9 = drive.trajectoryBuilder(autoTrajectory8.end().plus(new Pose2d(0,0,Math.toRadians(180))))
-                .lineToLinearHeading(new Pose2d(36, 28, Math.toRadians(180)))
-                .build();
-
-        Trajectory autoTrajectory10 = drive.trajectoryBuilder(autoTrajectory12.end())
-                .strafeRight(16.0)
-                .build();
-
-
-
-        // before moving to ground junction, lift the gripper slightly
-        moveLiftToPosition(-250);
         drive.followTrajectory(
-                // drops cone at ground junction
+                // moves forward
                 autoTrajectory1);
-        //open gripper
-        gripper.setPosition(0);
-        Thread.sleep(50);
-        drive.followTrajectory(
-                // moves backward 6 inches
-                autoTrajectory2);
-        drive.followTrajectory(
-                // strafe right 3 inches
-                autoTrajectory5);
-        drive.turn(Math.toRadians(-90));
-        //moving the gripper back to original position
-        moveLiftToPosition(0);
-        drive.followTrajectory(
-                // grabs detection cone
-                autoTrajectory3);
-        //close gripper
-        gripper.setPosition(1);
-        Thread.sleep(50);
 
-        moveLiftToPosition(-5150);
-
-        drive.followTrajectory(
-                // goes to mid junction and drops cone
-                autoTrajectory4);
-
-        // strafe/adjust automation to center
-
-        //move linear slide to medium junction height
-        drive.followTrajectory(
-                // goes forward
-                autoTrajectory11);
-
-        Thread.sleep(50);
-
-        //open gripper
-        gripper.setPosition(0);
-        Thread.sleep(50);
-
-        drive.followTrajectory(
-                // goes backward to clear junction
-                autoTrajectory12);
-
-
-        Thread.sleep(50);
         drive.followTrajectory(
                 // strafes left
-                autoTrajectory6);
-        drive.turn(Math.toRadians(180));
-        //move lift to height of top cone on stack
-        moveLiftToPosition(-1375);
-        drive.followTrajectory(
-                // goes to stack of cones
-                autoTrajectory7);
+                autoTrajectory2);
 
-
-        //close gripper
-        gripper.setPosition(1);
-        Thread.sleep(150);
-
-        //move lift up as to not knock down the rest of the cones
-        //move to medium junction height
-        moveLiftToPosition(-2500);
-        Thread.sleep(150);
-
+        moveLiftToPositionAsync(-6600);
 
         drive.followTrajectory(
-                // moves forward 12 inches
-                autoTrajectory8);
+                // goes to high junction and drops cone
+                autoTrajectory3);
 
-        drive.turn(Math.toRadians(180));
+        checkLiftInPositionAsync(-6600);
 
-        drive.followTrajectory(
-                // goes to mid junction round 2
-                autoTrajectory9);
-
-        // strafe/adjust automation for centering
-
-        //move linear slide to medium junction height
-        moveLiftToPosition(-5150);
+        /*
         drive.followTrajectory(
                 // goes forward
-                autoTrajectory11);
+                autoTrajectory4);
+        */
 
-        Thread.sleep(50);
+        Thread.sleep(500);
+
+        gripperfolder.setPower(1.0);
+        Thread.sleep(1750);
+        gripperfolder.setPower(0);
 
         //open gripper
         gripper.setPosition(0);
-        Thread.sleep(50);
 
+        Thread.sleep(250);
+
+        /*
         drive.followTrajectory(
                 // goes backward to clear junction
-                autoTrajectory12);
+                autoTrajectory5);
+        */
 
+        Thread.sleep(50);
         drive.followTrajectory(
-                // strafe right to zones
-                autoTrajectory10);
+                // strafes left to parking zones
+                autoTrajectory6);
 
+
+        gripperfolder.setPower(-1.0);
+        Thread.sleep(1750);
+        gripperfolder.setPower(0);
 
         // Actually do something useful
-        if (tagOfInterest == null || tagOfInterest.id == LEFT) {
+        if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {
 
             //trajectory
-            Trajectory zone1 = drive.trajectoryBuilder(autoTrajectory10.end())
+            Trajectory zone2 = drive.trajectoryBuilder(autoTrajectory6.end())
                     .back(24.0)
                     .build();
 
-            drive.followTrajectory(zone1);
+            drive.followTrajectory(zone2);
 
         } else if (tagOfInterest.id == RIGHT) {
 
             //trajectory
-            Trajectory zone3 = drive.trajectoryBuilder(autoTrajectory10.end())
-                    .forward(24.0)
+            Trajectory zone3 = drive.trajectoryBuilder(autoTrajectory6.end())
+                    .back(48.0)
                     .build();
 
             drive.followTrajectory(zone3);
 
-        } else {
-
-            // right trajectory
         }
-
-
 
     }
 
@@ -467,23 +377,18 @@ public class BlueAutonomous2RedAutonomous1 extends LinearOpMode {
         gripper = hardwareMap.get(Servo.class, "GrabberServo");
         gripper.setPosition(1);
 
-        rotator = hardwareMap.get(CRServo.class, "GripperRotator");
+        gripperfolder = hardwareMap.get(CRServo.class, "GripperFolder");
 
-        heightSensor = hardwareMap.get(DistanceSensor.class, "gripperHeight");
+        gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
+        rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
+        leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
-        centeringSensor = hardwareMap.get(TouchSensor.class, "touch");
-
-        if ( centeringSensor.isPressed() == false ) {
-            telemetry.addLine("gripper is not centered");
-        } else {
-            telemetry.addLine("Robot Initialized");
-        }
+        telemetry.addLine("Robot Initialized");
         telemetry.update();
     }
 
     void moveLiftToPosition(int pos) {
         int tposition = pos;
-        final int ttolerance = 25;
         int thigher = tposition - ttolerance;
         int tlower = tposition + ttolerance;
 
@@ -504,6 +409,44 @@ public class BlueAutonomous2RedAutonomous1 extends LinearOpMode {
 
             if ( ((lift1position < tlower) && (lift1position > thigher)) ||
                     ((lift2position < tlower) && (lift2position > thigher)) ) {
+
+                lift1.setPower(0.0);
+                lift2.setPower(0.0);
+                break;
+            }
+        }
+    }
+
+    void moveLiftToPositionAsync(int pos) {
+        int tposition = pos;
+        int thigher = tposition - ttolerance;
+        int tlower = tposition + ttolerance;
+
+        lift1.setTargetPosition(tposition);
+        lift1.setTargetPositionTolerance(ttolerance);
+        lift2.setTargetPosition(tposition);
+        lift2.setTargetPositionTolerance(ttolerance);
+
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        lift1.setPower(1.0);
+        lift2.setPower(1.0);
+
+        // make sure you call checkListInPosition to make sure lift is in position
+    }
+
+    void checkLiftInPositionAsync(int pos) {
+        int tposition = pos;
+        int thigher = tposition - ttolerance;
+        int tlower = tposition + ttolerance;
+
+        while (true) {
+            int lift1position = lift1.getCurrentPosition();
+            int lift2position = lift2.getCurrentPosition();
+
+            if (((lift1position < tlower) && (lift1position > thigher)) ||
+                    ((lift2position < tlower) && (lift2position > thigher))) {
 
                 lift1.setPower(0.0);
                 lift2.setPower(0.0);
