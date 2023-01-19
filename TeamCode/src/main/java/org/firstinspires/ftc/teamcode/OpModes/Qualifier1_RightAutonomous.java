@@ -537,7 +537,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
         // now adjust for distance from the junction
         // if it is too close then it wont work properly because of the grabber folder
-        if ((rightDist < maxPD) || (leftDist < maxPD)) {
+        if ((rightDist < maxPD) && (leftDist < maxPD)) {
             for (int i=0;i<12;i++) {
                 drive.followTrajectory(
                         // strafeLeft1 inch
