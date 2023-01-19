@@ -17,6 +17,7 @@ import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.OpenCV.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDrive;
@@ -69,11 +70,15 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
     private DistanceSensor rightPole;
     private DistanceSensor leftPole;
 
+    SampleMecanumDrive drive ;
+
+    // these are short trajectories that can be used for adjustment
+    Trajectory strafeLeft1, strafeRight1, forward1, back1 ;
 
     @Override
     public void runOpMode() throws InterruptedException {
 
-        SampleMecanumDrive drive = new SampleMecanumDrive(hardwareMap);
+        drive = new SampleMecanumDrive(hardwareMap);
         //Starting the robot at the bottom left (blue auto)
         Pose2d startPose = new Pose2d(-36, 72, Math.toRadians(270));
         drive.setPoseEstimate(startPose);
@@ -196,6 +201,25 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
         Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory5.end())
                 .strafeLeft(16.0)
                 .build();
+
+
+        // below few trajectories are used for the adjustRobotPositionToJunction
+        strafeLeft1 = drive.trajectoryBuilder(autoTrajectory5.end())
+                .strafeLeft(1.0)
+                .build();
+
+        strafeRight1 = drive.trajectoryBuilder(autoTrajectory5.end())
+                .strafeRight(1.0)
+                .build();
+
+        forward1 = drive.trajectoryBuilder(autoTrajectory5.end())
+                .forward(1.0)
+                .build();
+
+        back1 = drive.trajectoryBuilder(autoTrajectory5.end())
+                .back(1.0)
+                .build();
+
 
         drive.followTrajectory(
                 // moves forward
@@ -455,4 +479,80 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
         }
     }
 
+    public boolean adjustRobotPositionToJunction () {
+        double rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+        double leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+
+        double maxPD = 12.0 ;
+
+        boolean angleGood = false;
+        boolean distGood = false ;
+
+        if ((rightDist < maxPD) && (leftDist < maxPD)) {
+            // then it is at a good angle relative to the junction
+            // we are good to go on angle
+        } else {
+            if ((rightDist >= maxPD) && (leftDist <= maxPD)) {
+
+                for (int i=0;i<12;i++) {
+                    drive.followTrajectory(
+                            // strafeLeft1 inch
+                            strafeLeft1);
+                    rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+                    leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+                    if ((rightDist < maxPD) && (leftDist < maxPD)) {
+                        angleGood = true ;
+                        break;
+                    }
+                }
+                if (!angleGood) {
+                    // we tried a lot and didnt succeed, so we give up
+                    return false;
+                }
+            } else {
+                if ((leftDist >= maxPD) && (rightDist <= maxPD)) {
+                    for (int i=0;i<12;i++) {
+                        drive.followTrajectory(
+                                // strafeLeft1 inch
+                                strafeRight1);
+                        rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+                        leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+                        if ((rightDist < maxPD) && (leftDist < maxPD)) {
+                            angleGood = true ;
+                            break;
+                        }
+                    }
+                    if (!angleGood)
+                        return false ;
+
+                } else {
+                    // Neither of the sensors have provided reasonable values
+                    // so abort
+                    return false ;
+                }
+            }
+        } // else for both being not close
+
+        // if it has reached here, then we know that it is at a good angle relative to junction
+
+        // now adjust for distance from the junction
+        // if it is too close then it wont work properly because of the grabber folder
+        if ((rightDist < maxPD) || (leftDist < maxPD)) {
+            for (int i=0;i<12;i++) {
+                drive.followTrajectory(
+                        // strafeLeft1 inch
+                        back1);
+                rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+                leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+                if ((rightDist > maxPD) || (leftDist > maxPD)) {
+                    distGood = true ;
+                    break;
+                }
+            }
+            if (!distGood)
+                return false ;
+
+        }
+        return true ;
+    }
 }
