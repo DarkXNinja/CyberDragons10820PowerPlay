@@ -63,6 +63,16 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
     DcMotorEx lift1;
     DcMotorEx lift2;
 
+    /*
+    //drivetrain motors
+    public DcMotorEx frontRight;
+    public DcMotorEx backRight;
+    public DcMotorEx frontLeft;
+    public DcMotorEx backLeft;
+
+
+     */
+
     private Servo gripper;
     private CRServo gripperfolder;
 
@@ -71,6 +81,8 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
     private DistanceSensor leftPole;
 
     SampleMecanumDrive drive ;
+
+    ElapsedTime centeringTimer = new ElapsedTime();
 
     // these are short trajectories that can be used for adjustment
     Trajectory strafeLeft1, strafeRight1, forward1, back1 ;
@@ -84,6 +96,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
         drive.setPoseEstimate(startPose);
 
         double slowerVel = 24.0;
+        double slowerVel2 = 5.0;
 
         initializeRobot();
 
@@ -173,6 +186,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
             telemetry.update();
         }
 
+
         if (isStopRequested()) return;
 
         Trajectory autoTrajectory1 = drive.trajectoryBuilder(startPose)
@@ -204,21 +218,35 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
 
         // below few trajectories are used for the adjustRobotPositionToJunction
-        strafeLeft1 = drive.trajectoryBuilder(autoTrajectory5.end())
-                .strafeLeft(1.0)
+        strafeLeft1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
+                .strafeLeft(1.0,
+                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
                 .build();
 
-        strafeRight1 = drive.trajectoryBuilder(autoTrajectory5.end())
-                .strafeRight(1.0)
+        strafeRight1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
+                .strafeRight(1.0,
+                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
                 .build();
 
-        forward1 = drive.trajectoryBuilder(autoTrajectory5.end())
-                .forward(1.0)
+        forward1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
+                .forward(1.0,
+                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
+
                 .build();
 
-        back1 = drive.trajectoryBuilder(autoTrajectory5.end())
-                .back(1.0)
+        back1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
+                .back(1.0,
+                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
                 .build();
+
 
 
         drive.followTrajectory(
@@ -237,13 +265,10 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
         checkLiftInPositionAsync(-6600);
 
-        /*
-        drive.followTrajectory(
-                // goes forward
-                autoTrajectory4);
-        */
 
-        Thread.sleep(500);
+        Thread.sleep(250);
+
+        //adjustRobotPositionToJunction();
 
         gripperfolder.setPower(1.0);
         Thread.sleep(1750);
@@ -254,11 +279,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
         Thread.sleep(250);
 
-        /*
-        drive.followTrajectory(
-                // goes backward to clear junction
-                autoTrajectory5);
-        */
+
 
         Thread.sleep(50);
         drive.followTrajectory(
@@ -290,6 +311,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
             drive.followTrajectory(zone3);
 
         }
+
 
     }
 
@@ -389,6 +411,24 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
     void initializeRobot()
     {
+
+        /*
+        // setting up drive train
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+
+        frontRight.setPower(0);
+        frontLeft.setPower(0);
+        backRight.setPower(0);
+        backLeft.setPower(0);
+
+        frontRight.setDirection(DcMotorEx.Direction.REVERSE);
+        backRight.setDirection(DcMotorEx.Direction.REVERSE);
+
+         */
+
         lift1 = hardwareMap.get(DcMotorEx.class,"lift1");
         lift2 = hardwareMap.get(DcMotorEx.class,"lift2");
 
@@ -478,8 +518,59 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
             }
         }
     }
+/*
+    void moveBackward(double speed) throws InterruptedException {
+        frontLeft.setPower(speed);
+        frontRight.setPower(speed);
+        backLeft.setPower(speed);
+        backRight.setPower(speed);
 
-    public boolean adjustRobotPositionToJunction () {
+
+
+    }
+
+    void moveForward(double speed) throws InterruptedException {
+        frontLeft.setPower(-speed);
+        frontRight.setPower(-speed);
+        backLeft.setPower(-speed);
+        backRight.setPower(-speed);
+
+    }
+
+    void moveLeft(double speed) throws InterruptedException {
+        frontLeft.setPower(speed);
+        frontRight.setPower(-speed);
+        backLeft.setPower(-speed);
+        backRight.setPower(speed);
+
+
+
+    }
+
+    void stopAllWheels() {
+
+        frontLeft.setPower(0.0);
+        frontRight.setPower(0.0);
+        backLeft.setPower(0.0);
+        backRight.setPower(0.0);
+
+
+    }
+
+    void moveRight(double speed) throws InterruptedException {
+        frontLeft.setPower(-speed);
+        frontRight.setPower(speed);
+        backLeft.setPower(speed);
+        backRight.setPower(-speed);
+
+
+    }
+
+    public boolean adjustRobotPositionToJunction() throws InterruptedException {
+
+        gripper.setPosition(1);
+
+
         double rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
         double leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
 
@@ -494,34 +585,44 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
         } else {
             if ((rightDist >= maxPD) && (leftDist <= maxPD)) {
 
-                for (int i=0;i<12;i++) {
-                    drive.followTrajectory(
-                            // strafeLeft1 inch
-                            strafeLeft1);
+                centeringTimer.reset();
+                while (centeringTimer.milliseconds() < 750) {
+
+                    moveLeft(0.25);
                     rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
                     leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
                     if ((rightDist < maxPD) && (leftDist < maxPD)) {
                         angleGood = true ;
                         break;
                     }
+
+
                 }
+                stopAllWheels();
+
                 if (!angleGood) {
                     // we tried a lot and didnt succeed, so we give up
                     return false;
                 }
             } else {
                 if ((leftDist >= maxPD) && (rightDist <= maxPD)) {
-                    for (int i=0;i<12;i++) {
-                        drive.followTrajectory(
-                                // strafeLeft1 inch
-                                strafeRight1);
+
+                    centeringTimer.reset();
+                    while (centeringTimer.milliseconds() < 750) {
+
+                        moveRight( 0.25);
+
                         rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
                         leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
                         if ((rightDist < maxPD) && (leftDist < maxPD)) {
                             angleGood = true ;
                             break;
                         }
+
                     }
+
+                    stopAllWheels();
+
                     if (!angleGood)
                         return false ;
 
@@ -534,25 +635,45 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
         } // else for both being not close
 
         // if it has reached here, then we know that it is at a good angle relative to junction
+        telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
+        telemetry.addLine("pole distance left: " + leftPole.getDistance(DistanceUnit.INCH));
+        telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
+
+        telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
+        telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
+        telemetry.update();
+        Thread.sleep(1000);
 
         // now adjust for distance from the junction
         // if it is too close then it wont work properly because of the grabber folder
         if ((rightDist < maxPD) && (leftDist < maxPD)) {
-            for (int i=0;i<12;i++) {
-                drive.followTrajectory(
-                        // strafeLeft1 inch
-                        back1);
+
+            centeringTimer.reset();
+            while (centeringTimer.milliseconds() < 750) {
+
+                moveBackward(0.25);
+
                 rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
                 leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
-                if ((rightDist > maxPD) || (leftDist > maxPD)) {
+                if ((rightDist > 9) && (leftDist > 9)) {
+                    stopAllWheels();
                     distGood = true ;
                     break;
                 }
+
             }
+
+
             if (!distGood)
                 return false ;
 
         }
+
         return true ;
+
+
     }
+
+    */
+
 }

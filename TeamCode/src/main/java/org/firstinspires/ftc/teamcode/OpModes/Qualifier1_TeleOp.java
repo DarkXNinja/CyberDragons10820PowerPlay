@@ -31,6 +31,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
     ElapsedTime durationTimer = new ElapsedTime();
 
+    ElapsedTime centeringTimer = new ElapsedTime();
+
     //private String gripperPosition;
 
     @Override
@@ -91,6 +93,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
         durationTimer.reset();
 
+
+
         while (opModeIsActive()) {
 
             // for the drive train
@@ -114,15 +118,20 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
 
             // for the rest
-            if (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
+            if (gamepad2.left_stick_y > 0) {
+                if (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
+
+                    lift1.setPower(gamepad2.left_stick_y);
+                    lift2.setPower(gamepad2.left_stick_y);
+
+                } else {
+                    lift1.setPower(0.0);
+                    lift2.setPower(0.0);
+                }
+            } else {
 
                 lift1.setPower(gamepad2.left_stick_y);
                 lift2.setPower(gamepad2.left_stick_y);
-
-            } else {
-
-                lift1.setPower(0);
-                lift2.setPower(0);
 
             }
 
@@ -158,6 +167,37 @@ public class Qualifier1_TeleOp extends LinearOpMode {
                 telemetry.update();
                 // reset timer
                 durationTimer.reset();
+            }
+
+
+            if (gamepad1.right_bumper){
+
+                resetLiftEncoder();
+
+            }
+
+
+            if (gamepad1.dpad_down) {
+
+                moveLiftToPosition(-1800);
+
+            }
+
+            if (gamepad1.dpad_up) {
+
+                moveLiftToPosition(-6300);
+
+            }
+
+            if (gamepad1.dpad_right) {
+
+                moveLiftToPosition(-3300);
+
+            }
+
+            if (gamepad1.dpad_left) {
+
+                adjustRobotPositionToJunction();
             }
 
 
@@ -320,6 +360,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 			}
 			*/
         }
+
+
     }
 
     void moveLiftToPosition(int pos) {
@@ -351,5 +393,208 @@ public class Qualifier1_TeleOp extends LinearOpMode {
           break;
         }
       }
+
+        lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+        lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+
     }
+
+    void moveBackward(double speed) throws InterruptedException {
+        frontLeft.setPower(speed);
+        frontRight.setPower(speed);
+        backLeft.setPower(speed);
+        backRight.setPower(speed);
+
+
+
+    }
+
+    void moveForward(double speed) throws InterruptedException {
+        frontLeft.setPower(-speed);
+        frontRight.setPower(-speed);
+        backLeft.setPower(-speed);
+        backRight.setPower(-speed);
+
+    }
+
+    void moveLeft(double speed) throws InterruptedException {
+        frontLeft.setPower(speed);
+        frontRight.setPower(-speed);
+        backLeft.setPower(-speed);
+        backRight.setPower(speed);
+
+        /*
+        Thread.sleep(time);
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+
+
+         */
+
+    }
+
+    void stopAllWheels() {
+
+        frontLeft.setPower(0.0);
+        frontRight.setPower(0.0);
+        backLeft.setPower(0.0);
+        backRight.setPower(0.0);
+
+
+    }
+
+    void moveRight(double speed) throws InterruptedException {
+        frontLeft.setPower(-speed);
+        frontRight.setPower(speed);
+        backLeft.setPower(speed);
+        backRight.setPower(-speed);
+
+        /*
+        Thread.sleep(time);
+
+        frontLeft.setPower(0);
+        frontRight.setPower(0);
+        backLeft.setPower(0);
+        backRight.setPower(0);
+
+         */
+    }
+
+    public boolean adjustRobotPositionToJunction() throws InterruptedException {
+
+        grabberservo.setPosition(1);
+
+
+        double rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+        double leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+
+        double maxPD = 12.0 ;
+
+        boolean angleGood = false;
+        boolean distGood = false ;
+
+        if ((rightDist < maxPD) && (leftDist < maxPD)) {
+            // then it is at a good angle relative to the junction
+            // we are good to go on angle
+        } else {
+            if ((rightDist >= maxPD) && (leftDist <= maxPD)) {
+
+                centeringTimer.reset();
+                while (centeringTimer.milliseconds() < 750) {
+
+                    moveLeft(0.25);
+                    rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+                    leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+                    if ((rightDist < maxPD) && (leftDist < maxPD)) {
+                        angleGood = true ;
+                        break;
+                    }
+
+
+                }
+                stopAllWheels();
+
+                if (!angleGood) {
+                    // we tried a lot and didnt succeed, so we give up
+                    return false;
+                }
+            } else {
+                if ((leftDist >= maxPD) && (rightDist <= maxPD)) {
+
+                    centeringTimer.reset();
+                    while (centeringTimer.milliseconds() < 750) {
+
+                        moveRight( 0.25);
+
+                        rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+                        leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+                        if ((rightDist < maxPD) && (leftDist < maxPD)) {
+                            angleGood = true ;
+                            break;
+                        }
+
+                    }
+
+                    stopAllWheels();
+
+                    if (!angleGood)
+                        return false ;
+
+                } else {
+                    // Neither of the sensors have provided reasonable values
+                    // so abort
+                    return false ;
+                }
+            }
+        } // else for both being not close
+
+        // if it has reached here, then we know that it is at a good angle relative to junction
+        telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
+        telemetry.addLine("pole distance left: " + leftPole.getDistance(DistanceUnit.INCH));
+        telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
+
+        telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
+        telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
+        telemetry.update();
+        Thread.sleep(1000);
+
+        // now adjust for distance from the junction
+        // if it is too close then it wont work properly because of the grabber folder
+        if ((rightDist < maxPD) && (leftDist < maxPD)) {
+
+            centeringTimer.reset();
+            while (centeringTimer.milliseconds() < 750) {
+
+                moveBackward(0.25);
+
+                rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
+                leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
+                if ((rightDist > 9) && (leftDist > 9)) {
+                    stopAllWheels();
+                    distGood = true ;
+                    break;
+                }
+
+            }
+
+
+            if (!distGood)
+                return false ;
+
+        }
+
+        return true ;
+
+
+    }
+
+    public void resetLiftEncoder() {
+
+        lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+        lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+
+        lift1.setPower(0.75);
+        lift2.setPower(0.75);
+        while (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
+
+        }
+        lift1.setPower(0.0);
+        lift2.setPower(0.0);
+
+        lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+        lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
+
+
+
+    }
+
+
+
+
 }
