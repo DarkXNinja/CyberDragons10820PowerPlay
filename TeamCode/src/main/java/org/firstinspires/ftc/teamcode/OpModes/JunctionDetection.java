@@ -40,9 +40,31 @@ public class JunctionDetection extends LinearOpMode {
 
         while (!isStarted()) {
 
-            // need to get bounding boxes here
-            telemetry.addData("", "");
+
+            // displays maxX and maxY
+            telemetry.addData("X value: ", detector.maxX);
+            telemetry.addData("Y value: ", detector.maxY);
+
             telemetry.update();
+            /*
+            if (detector.length == 0) {
+
+
+            } else {
+
+                // need to get bounding boxes here
+                for (int i = 0; i < detector.boxX.length; i++) {
+
+                    telemetry.addData("X value: ", detector.boxX[i]);
+                    telemetry.addData("Y value: ", detector.boxY[i]);
+
+                    telemetry.update();
+
+                }
+            }
+            */
+
+
 
         }
 
