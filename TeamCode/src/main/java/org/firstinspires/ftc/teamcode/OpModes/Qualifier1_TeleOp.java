@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
@@ -65,6 +66,9 @@ public class Qualifier1_TeleOp extends LinearOpMode {
         lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
         lift2 = hardwareMap.get(DcMotorEx.class, "lift2");
 
+        //reversing lift 2
+        lift2.setDirection(DcMotorSimple.Direction.REVERSE);
+
         lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
         lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
@@ -127,8 +131,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
             if (gamepad2.left_stick_y > 0) {
                 if (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
 
-                    lift1.setPower(gamepad2.left_stick_y);
-                    lift2.setPower(gamepad2.left_stick_y);
+                    lift1.setPower(gamepad2.left_stick_y * 0.5);
+                    lift2.setPower(gamepad2.left_stick_y * 0.5);
 
                 } else {
                     lift1.setPower(0.0);
@@ -136,8 +140,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
                 }
             } else {
 
-                lift1.setPower(gamepad2.left_stick_y);
-                lift2.setPower(gamepad2.left_stick_y);
+                lift1.setPower(gamepad2.left_stick_y * 0.5);
+                lift2.setPower(gamepad2.left_stick_y * 0.5);
 
             }
 

@@ -5,6 +5,7 @@ import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
+import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
@@ -27,9 +28,12 @@ public class JunctionPipeline extends OpenCvPipeline {
     public double[] boxY;
 
     public int length = 0;
-    public int maxX;
-    public int maxY;
-    public int index;
+    public int maxWidth = 0;
+    public int maxHeight = 0;
+    public int x = 0;
+    public int index = 0;
+    public Point topLeftCoordinate;
+    public Point bottomRightCoordinate;
 
     public JunctionPipeline() {
         frameList = new ArrayList<>();
@@ -97,35 +101,44 @@ public class JunctionPipeline extends OpenCvPipeline {
 
         }
 
-        boxX = new double[boundRect.length];
-        boxY = new double[boundRect.length];
-
-        length = boundRect.length;
-
         for (int i = 0; i != boundRect.length; i++) {
 
             // draw red bounding rectangles on mat
             // the mat has been converted to HSV so we need to use HSV as well
-            Imgproc.rectangle(input, boundRect[i], new Scalar(0, 255, 255));
-            boxX[i] = boundRect[i].x;
-            boxY[i] = boundRect[i].y;
+            Imgproc.rectangle(finalMask, boundRect[i], new Scalar(0, 255, 255));
 
         }
 
-        // finds largest X value of all boxes created
-        maxX = boundRect[0].x;
-        index = 0;
-        for (int i = 0; i < boundRect.length; i++) {
+        length = boundRect.length;
 
-            if (boundRect[i].x > maxX) {
+        if (boundRect.length != 0) {
 
-                index = i;
+            // finds largest box(width) value of all boxes created
+            maxWidth = 0;
+            index = 0;
+            for (int i = 0; i < boundRect.length; i++) {
 
+                if (boundRect[i].width >  maxWidth) {
+
+                    index = i;
+                    maxWidth = boundRect[i].width;
+
+                }
             }
-        }
 
-        maxX = boundRect[index].x;
-        maxY = boundRect[index].y;
+
+            topLeftCoordinate = boundRect[index].tl();
+            bottomRightCoordinate = boundRect[index].br();
+            x = boundRect[index].x;
+
+            maxWidth = boundRect[index].width;
+            maxHeight = boundRect[index].height;
+
+            //topLeftCoordinate = "(" + boundRect[index].x + ", " + boundRect[index].y + ")";
+            //bottomRightCoordinate = "(" + (boundRect[index].x + boundRect[index].width) + ", " + (boundRect[index].y + boundRect[index].height) + ")";
+
+
+        }
 
 
         //list of frames to reduce inconsistency, not too many so that it is still real-time, change the number from 5 if you want
@@ -135,7 +148,7 @@ public class JunctionPipeline extends OpenCvPipeline {
 
 
         //release all the data
-        //input.release();
+        input.release();
         scaledThresh.copyTo(input);
         scaledThresh.release();
         scaledMask.release();
@@ -143,14 +156,14 @@ public class JunctionPipeline extends OpenCvPipeline {
         masked.release();
         //edges.release();
         thresh.release();
-        finalMask.release();
+        //finalMask.release();
         //change the return to whatever mat you want
         //for example, if I want to look at the lenient thresh:
         // return thresh;
         // note that you must not do thresh.release() if you want to return thresh
         // you also need to release the input if you return thresh(release as much as possible)
 
-        return input;
+        return finalMask;
     }
 
 
