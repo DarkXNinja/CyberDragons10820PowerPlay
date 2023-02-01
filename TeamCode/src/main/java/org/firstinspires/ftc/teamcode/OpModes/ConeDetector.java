@@ -8,15 +8,14 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
-import org.firstinspires.ftc.teamcode.OpenCV.JunctionPipeline;
+import org.firstinspires.ftc.teamcode.OpenCV.ConePipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
 
 @Autonomous
-public class JunctionDetection extends LinearOpMode {
-
+public class ConeDetector extends LinearOpMode {
     //drivetrain motors
     public DcMotorEx frontRight;
     public DcMotorEx backRight;
@@ -25,7 +24,7 @@ public class JunctionDetection extends LinearOpMode {
 
     public DistanceSensor rightPole;
 
-    JunctionPipeline detector ;
+    ConePipeline detector ;
 
     public int avgX;
     public int screenWidth = 320;
@@ -54,7 +53,7 @@ public class JunctionDetection extends LinearOpMode {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, webcamName), cameraMonitorViewId);
 
-        detector = new JunctionPipeline();
+        detector = new ConePipeline();
 
         camera.setPipeline(detector);
 
@@ -99,7 +98,6 @@ public class JunctionDetection extends LinearOpMode {
 
 
         }
-        sleep(10000) ;
     }
 
     // function for checking if camera is within bounds
@@ -113,12 +111,6 @@ public class JunctionDetection extends LinearOpMode {
         int rmscreen = midScreen + sTolerance ;
 
         avgX = (detector.maxWidth/2) + detector.x;
-
-        telemetry.addData("lmscreen:", " " + lmscreen + " rmscreen: " + rmscreen);
-
-        // displays bounding box info
-        telemetry.addData("\nWidth value:", " " + detector.maxWidth + " x value: " + detector.x + " avgX: " + avgX);
-        //telemetry.update();
 
         // if it is mostly centered then
         if ((avgX >= lmscreen) && (avgX <= rmscreen)) {
@@ -144,74 +136,14 @@ public class JunctionDetection extends LinearOpMode {
         }
         else {
             if (rpos < 0) {
-                telemetry.addData("Robot is ", "moving left.");
-                //telemetry.update();
-
-                // for some reason using timer is not working
-                timer.reset() ;
-                moveLeft(0.25);
-                while(timer.milliseconds() < 5000) {
-                    sleep(100);
-                    if (checkCameraWithinBounds() == 0) {
-                        telemetry.addData("Robot has", "reached center.");
-                        telemetry.update() ;
-                        break ;
-                    }
-                }
-                stopAllWheels();
-
-                /*
-                for(int i=0;i<10;i++) {
-                    moveLeft(0.5);
-                    sleep(50) ;
-                    stopAllWheels();
-                    sleep(50) ;
-                    if (checkCameraWithinBounds() == 0) {
-                        telemetry.addData("Robot has", "reached center.");
-                        //telemetry.update() ;
-                        break ;
-                    }
-                    //sleep (5000) ;
-                }
-                 */
-
-            } else {
+                moveRight(0.5);
                 telemetry.addData("Robot is ", "moving right.");
-                //telemetry.update();
-
-
-                timer.reset() ;
-                moveRight(0.25);
-                while(timer.milliseconds() < 5000) {
-                    sleep(100);
-                    if (checkCameraWithinBounds() == 0) {
-                        telemetry.addData("Robot has", "reached center.");
-                        telemetry.update() ;
-                        break ;
-                    }
-
-                }
-                stopAllWheels();
-
-                /*
-                for(int i=0;i<10;i++) {
-                    moveRight(0.5);
-                    sleep(50);
-                    stopAllWheels();
-                    sleep(50);
-                    if (checkCameraWithinBounds() == 0) {
-                        telemetry.addData("Robot has", "reached center.");
-                        //telemetry.update();
-                        break;
-                    }
-                    //sleep(5000);
-                }
-                 */
-
+            } else {
+                moveLeft(0.5);
+                telemetry.addData("Robot is ", "moving left.");
             }
         }
 
-        /*
         while (timer.milliseconds() < 5000) {
             if (checkCameraWithinBounds() == 0) {
                 stopAllWheels();
@@ -220,9 +152,11 @@ public class JunctionDetection extends LinearOpMode {
                 break;
             }
         }
-        */
-        telemetry.update() ;
+
         stopAllWheels();
+        telemetry.addData("Robot has", "reached time limit.");
+        telemetry.update() ;
+
     }
 
     void moveBackward(double speed) {
@@ -267,4 +201,5 @@ public class JunctionDetection extends LinearOpMode {
         backRight.setPower(-speed);
 
     }
+
 }
