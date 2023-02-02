@@ -10,6 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -74,7 +75,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
      */
 
     private Servo gripper;
-    private CRServo gripperfolder;
+    private Servo gripperfolder;
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
@@ -257,22 +258,21 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
                 // strafes left
                 autoTrajectory2);
 
-        moveLiftToPositionAsync(-6600);
+        moveLiftToPositionAsync(-3000);
 
         drive.followTrajectory(
                 // goes to high junction and drops cone
                 autoTrajectory3);
 
-        checkLiftInPositionAsync(-6600);
+        checkLiftInPositionAsync(-3000);
 
 
         Thread.sleep(250);
 
         //adjustRobotPositionToJunction();
 
-        gripperfolder.setPower(1.0);
-        Thread.sleep(1750);
-        gripperfolder.setPower(0);
+
+        // gripper going down
 
         //open gripper
         gripper.setPosition(0);
@@ -287,9 +287,9 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
                 autoTrajectory6);
 
 
-        gripperfolder.setPower(-1.0);
+        //gripperfolder.setPower(-1.0);
         Thread.sleep(1750);
-        gripperfolder.setPower(0);
+        //gripperfolder.setPower(0);
 
         // Actually do something useful
         if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {
@@ -438,10 +438,13 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
         lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
 
+        //reversing lift 2
+        lift2.setDirection(DcMotorSimple.Direction.REVERSE);
+
         gripper = hardwareMap.get(Servo.class, "GrabberServo");
         gripper.setPosition(1);
 
-        gripperfolder = hardwareMap.get(CRServo.class, "GripperFolder");
+        gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");

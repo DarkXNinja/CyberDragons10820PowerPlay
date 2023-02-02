@@ -72,8 +72,8 @@ public class ConePipeline extends OpenCvPipeline {
 
         Mat scaledThresh = new Mat();
         //you probably want to tune this --- ???? THIS NEEDS TO BE DONE
-        Scalar strictLowHSV = new Scalar(0, strictLowS, 0); //strict lower bound HSV for yellow
-        Scalar strictHighHSV = new Scalar(255, strictHighS, 255); //strict higher bound HSV for yellow
+        Scalar strictLowHSV = new Scalar(strictLowS, 0, 5); //strict lower bound HSV for yellow
+        Scalar strictHighHSV = new Scalar(strictHighS, 255, 255); //strict higher bound HSV for yellow
         //apply strict HSV filter onto scaledMask to get rid of any yellow other than pole
         Core.inRange(scaledMask, strictLowHSV, strictHighHSV, scaledThresh);
 

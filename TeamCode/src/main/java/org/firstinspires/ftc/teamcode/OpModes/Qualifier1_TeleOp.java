@@ -24,7 +24,7 @@ public class Qualifier1_TeleOp extends LinearOpMode {
     private DcMotorEx lift1;
     private DcMotorEx lift2;
     private Servo grabberservo;
-    private CRServo gripperfolder;
+    private Servo gripperfolder;
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
@@ -85,7 +85,7 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
         grabberservo = hardwareMap.get(Servo.class, "GrabberServo");
         grabberservo.setPosition(1);
-        gripperfolder = hardwareMap.get(CRServo.class, "GripperFolder");
+        gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
@@ -154,15 +154,11 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
             if (gamepad2.dpad_up) {
 
-                gripperfolder.setPower(-1.0);
+                gripperfolder.setPosition(1.0);
 
             } else if (gamepad2.dpad_down) {
 
-                gripperfolder.setPower(1.0);
-
-            } else {
-
-                gripperfolder.setPower(0.0);
+                gripperfolder.setPosition(0.0);
 
             }
 
