@@ -214,35 +214,23 @@ public class Qualifier1_LeftAutonomous extends LinearOpMode {
 
         checkLiftInPositionAsync(-3000);
 
-        /*
-        drive.followTrajectory(
-                // goes forward
-                autoTrajectory4);
-        */
+        // gripper going down
+        gripperfolder.setPosition(1.0);
 
-        Thread.sleep(500);
-
-        // gripper down
+        Thread.sleep(2000);
 
         //open gripper
         gripper.setPosition(0);
 
         Thread.sleep(250);
 
-        /*
-        drive.followTrajectory(
-                // goes backward to clear junction
-                autoTrajectory5);
-        */
-
-        Thread.sleep(50);
-
+        gripperfolder.setPosition(0.0);
+        Thread.sleep(1000);
 
         drive.followTrajectory(
                 // strafes right to parking zones
                 autoTrajectory6);
 
-        // gripper up
 
         // Actually do something useful
         if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {

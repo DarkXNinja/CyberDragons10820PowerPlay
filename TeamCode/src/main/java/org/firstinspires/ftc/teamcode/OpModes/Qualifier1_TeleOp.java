@@ -84,14 +84,16 @@ public class Qualifier1_TeleOp extends LinearOpMode {
         //lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         grabberservo = hardwareMap.get(Servo.class, "GrabberServo");
-        grabberservo.setPosition(1);
+
+
         gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
         leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
-
+        grabberservo.setPosition(1);
+        gripperfolder.setPosition(0);
 
         waitForStart();
 
@@ -104,7 +106,7 @@ public class Qualifier1_TeleOp extends LinearOpMode {
             // for the drive train
             double y = gamepad1.left_stick_y; // Remember, this is reversed!
             double x = gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
-            double rx = -gamepad1.right_stick_x * 0.5;
+            double rx = -gamepad1.right_stick_x * 0.75;
 
             // Denominator is the largest motor power (absolute value) or 1
             // This ensures all the powers maintain the same ratio, but only when
@@ -120,19 +122,19 @@ public class Qualifier1_TeleOp extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower * 0.75);
-            backLeft.setPower(backLeftPower * 0.75);
-            frontRight.setPower(frontRightPower * 0.75);
-            backRight.setPower(backRightPower * 0.75);
+            frontLeft.setPower(frontLeftPower * 0.5);
+            backLeft.setPower(backLeftPower * 0.5);
+            frontRight.setPower(frontRightPower * 0.5);
+            backRight.setPower(backRightPower * 0.5);
 
 
 
             // for the rest
             if (gamepad2.left_stick_y > 0) {
-                if (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
+                if (gripperHeight.getDistance(DistanceUnit.INCH) > 1.5) {
 
-                    lift1.setPower(gamepad2.left_stick_y * 0.5);
-                    lift2.setPower(gamepad2.left_stick_y * 0.5);
+                    lift1.setPower(gamepad2.left_stick_y * 0.75);
+                    lift2.setPower(gamepad2.left_stick_y * 0.75);
 
                 } else {
                     lift1.setPower(0.0);
@@ -140,8 +142,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
                 }
             } else {
 
-                lift1.setPower(gamepad2.left_stick_y * 0.5);
-                lift2.setPower(gamepad2.left_stick_y * 0.5);
+                lift1.setPower(gamepad2.left_stick_y * 0.75);
+                lift2.setPower(gamepad2.left_stick_y * 0.75);
 
             }
 
@@ -152,11 +154,11 @@ public class Qualifier1_TeleOp extends LinearOpMode {
                 grabberservo.setPosition(0);
             }
 
-            if (gamepad2.dpad_up) {
+            if (gamepad2.dpad_down) {
 
                 gripperfolder.setPosition(1.0);
 
-            } else if (gamepad2.dpad_down) {
+            } else if (gamepad2.dpad_up) {
 
                 gripperfolder.setPosition(0.0);
 
@@ -185,19 +187,19 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
             if (gamepad1.dpad_down) {
 
-                moveLiftToPosition(-1800);
+                moveLiftToPosition(-500);
 
             }
 
             if (gamepad1.dpad_up) {
 
-                moveLiftToPosition(-6300);
+                moveLiftToPosition(-3000);
 
             }
 
             if (gamepad1.dpad_right) {
 
-                moveLiftToPosition(-3300);
+                moveLiftToPosition(-1700);
 
             }
 

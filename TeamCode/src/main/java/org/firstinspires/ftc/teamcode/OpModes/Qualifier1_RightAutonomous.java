@@ -273,13 +273,17 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
 
         // gripper going down
+        gripperfolder.setPosition(1.0);
+
+        Thread.sleep(2000);
 
         //open gripper
         gripper.setPosition(0);
 
         Thread.sleep(250);
 
-
+        gripperfolder.setPosition(0.0);
+        Thread.sleep(1000);
 
         Thread.sleep(50);
         drive.followTrajectory(
@@ -287,9 +291,7 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
                 autoTrajectory6);
 
 
-        //gripperfolder.setPower(-1.0);
-        Thread.sleep(1750);
-        //gripperfolder.setPower(0);
+
 
         // Actually do something useful
         if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {
