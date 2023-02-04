@@ -1,20 +1,14 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import android.text.method.Touch;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -29,7 +23,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 
 @Autonomous
-public class Qualifier1_LeftAutonomous extends LinearOpMode {
+public class Qualifier2_LeftAutonomous extends LinearOpMode {
 
 
     OpenCvCamera camera;
@@ -68,7 +62,6 @@ public class Qualifier1_LeftAutonomous extends LinearOpMode {
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
-    private DistanceSensor leftPole;
 
 
     @Override
@@ -180,7 +173,7 @@ public class Qualifier1_LeftAutonomous extends LinearOpMode {
                 .build();
 
         Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory2.end())
-                .lineToLinearHeading(new Pose2d(14, 27, Math.toRadians(180)),
+                .lineToLinearHeading(new Pose2d(12, 27, Math.toRadians(180)),
                         SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
@@ -370,7 +363,6 @@ public class Qualifier1_LeftAutonomous extends LinearOpMode {
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
-        leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
         telemetry.addLine("Robot Initialized");
         telemetry.update();

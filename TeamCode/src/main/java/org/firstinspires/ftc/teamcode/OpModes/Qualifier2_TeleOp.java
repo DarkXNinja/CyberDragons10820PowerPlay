@@ -2,18 +2,16 @@ package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
 @TeleOp
-public class Qualifier1_TeleOp extends LinearOpMode {
+public class Qualifier2_TeleOp extends LinearOpMode {
 
     //drivetrain motors
     public DcMotorEx frontRight;
@@ -28,11 +26,13 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
-    private DistanceSensor leftPole;
 
     ElapsedTime durationTimer = new ElapsedTime();
 
     ElapsedTime centeringTimer = new ElapsedTime();
+
+    final int ttolerance = 25;
+
 
     //private String gripperPosition;
 
@@ -69,8 +69,8 @@ public class Qualifier1_TeleOp extends LinearOpMode {
         //reversing lift 2
         lift2.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        lift1.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        lift2.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         lift1.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
@@ -90,7 +90,6 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
-        leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
         grabberservo.setPosition(1);
         gripperfolder.setPosition(0);
@@ -122,10 +121,10 @@ public class Qualifier1_TeleOp extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower * 0.5);
-            backLeft.setPower(backLeftPower * 0.5);
-            frontRight.setPower(frontRightPower * 0.5);
-            backRight.setPower(backRightPower * 0.5);
+            frontLeft.setPower(frontLeftPower * 0.6);
+            backLeft.setPower(backLeftPower * 0.6);
+            frontRight.setPower(frontRightPower * 0.6);
+            backRight.setPower(backRightPower * 0.6);
 
 
 
@@ -154,11 +153,11 @@ public class Qualifier1_TeleOp extends LinearOpMode {
                 grabberservo.setPosition(0);
             }
 
-            if (gamepad2.dpad_down) {
+            if (gamepad2.left_bumper) {
 
                 gripperfolder.setPosition(1.0);
 
-            } else if (gamepad2.dpad_up) {
+            } else if (gamepad2.right_bumper) {
 
                 gripperfolder.setPosition(0.0);
 
@@ -167,7 +166,6 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
             if (durationTimer.milliseconds() > 1000) {
                 telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
-                telemetry.addLine("pole distance left: " + leftPole.getDistance(DistanceUnit.INCH));
                 telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
 
                 telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
@@ -185,29 +183,37 @@ public class Qualifier1_TeleOp extends LinearOpMode {
             }
 
 
-            if (gamepad1.dpad_down) {
+            if (gamepad2.dpad_down) {
 
-                moveLiftToPosition(-500);
-
-            }
-
-            if (gamepad1.dpad_up) {
-
-                moveLiftToPosition(-3000);
+                moveLiftToPosition(-1000);
 
             }
 
-            if (gamepad1.dpad_right) {
+            if (gamepad2.dpad_up) {
 
-                moveLiftToPosition(-1700);
+                moveLiftToPosition(-3300);
+
+            }
+
+            if (gamepad2.dpad_right) {
+
+                moveLiftToPosition(-2000);
 
             }
 
             if (gamepad1.dpad_left) {
 
-                adjustRobotPositionToJunction();
+                //adjustRobotPositionToJunction();
             }
 
+            if (gamepad1.left_bumper) {
+                lift1.setPower(0.0) ;
+                lift2.setPower(0.0);
+                lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+                lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+
+                //adjustRobotPositionToJunction();
+            }
 
 
             //Needs values
@@ -470,7 +476,7 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
          */
     }
-
+    /*
     public boolean adjustRobotPositionToJunction() throws InterruptedException {
 
         grabberservo.setPosition(1);
@@ -578,15 +584,17 @@ public class Qualifier1_TeleOp extends LinearOpMode {
 
 
     }
+    */
+
 
     public void resetLiftEncoder() {
 
         lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
         lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
 
-        lift1.setPower(0.75);
-        lift2.setPower(0.75);
-        while (gripperHeight.getDistance(DistanceUnit.INCH) > 3.5) {
+        lift1.setPower(0.5);
+        lift2.setPower(0.5);
+        while (gripperHeight.getDistance(DistanceUnit.INCH) > 1.5) {
 
         }
         lift1.setPower(0.0);
@@ -599,7 +607,27 @@ public class Qualifier1_TeleOp extends LinearOpMode {
         lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
 
 
+    }
 
+    void moveLiftToPositionAsync(int pos) {
+        int tposition = pos;
+        int thigher = tposition - ttolerance;
+        int tlower = tposition + ttolerance;
+
+        lift1.setTargetPosition(tposition);
+        lift1.setTargetPositionTolerance(ttolerance);
+        lift2.setTargetPosition(tposition);
+        lift2.setTargetPositionTolerance(ttolerance);
+
+        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
+        lift1.setPower(1.0);
+        lift2.setPower(1.0);
+
+        // make sure you call checkListInPosition to make sure lift is in position
     }
 
 

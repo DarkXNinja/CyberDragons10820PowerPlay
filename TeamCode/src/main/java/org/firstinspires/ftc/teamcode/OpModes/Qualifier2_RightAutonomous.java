@@ -1,24 +1,17 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
-import android.text.method.Touch;
-
 import com.acmerobotics.roadrunner.geometry.Pose2d;
-import com.acmerobotics.roadrunner.geometry.Vector2d;
 import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
-import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
-import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
-import com.qualcomm.robotcore.hardware.TouchSensor;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
-import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.OpenCV.AprilTagDetectionPipeline;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDrive;
@@ -30,7 +23,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 
 @Autonomous
-public class Qualifier1_RightAutonomous extends LinearOpMode {
+public class Qualifier2_RightAutonomous extends LinearOpMode {
 
 
     OpenCvCamera camera;
@@ -79,7 +72,6 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
-    private DistanceSensor leftPole;
 
     SampleMecanumDrive drive ;
 
@@ -450,7 +442,6 @@ public class Qualifier1_RightAutonomous extends LinearOpMode {
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
-        leftPole = hardwareMap.get(DistanceSensor.class, "leftPole");
 
         telemetry.addLine("Robot Initialized");
         telemetry.update();
