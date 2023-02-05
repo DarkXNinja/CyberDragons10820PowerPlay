@@ -614,14 +614,15 @@ public class Qualifier2_TeleOp extends LinearOpMode {
         int thigher = tposition - ttolerance;
         int tlower = tposition + ttolerance;
 
+        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
         lift1.setTargetPosition(tposition);
         lift1.setTargetPositionTolerance(ttolerance);
         lift2.setTargetPosition(tposition);
         lift2.setTargetPositionTolerance(ttolerance);
 
-        lift1.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        lift2.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
         lift1.setPower(1.0);
