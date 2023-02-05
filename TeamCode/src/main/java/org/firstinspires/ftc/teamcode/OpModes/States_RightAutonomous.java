@@ -23,7 +23,7 @@ import org.openftc.easyopencv.OpenCvCameraRotation;
 import java.util.ArrayList;
 
 @Autonomous
-public class Qualifier2_RightAutonomous extends LinearOpMode {
+public class States_RightAutonomous extends LinearOpMode {
 
 
     OpenCvCamera camera;
@@ -57,15 +57,6 @@ public class Qualifier2_RightAutonomous extends LinearOpMode {
     DcMotorEx lift1;
     DcMotorEx lift2;
 
-    /*
-    //drivetrain motors
-    public DcMotorEx frontRight;
-    public DcMotorEx backRight;
-    public DcMotorEx frontLeft;
-    public DcMotorEx backLeft;
-
-
-     */
 
     private Servo gripper;
     private Servo gripperfolder;
@@ -77,8 +68,15 @@ public class Qualifier2_RightAutonomous extends LinearOpMode {
 
     ElapsedTime centeringTimer = new ElapsedTime();
 
-    // these are short trajectories that can be used for adjustment
-    Trajectory strafeLeft1, strafeRight1, forward1, back1 ;
+    /*
+    5 - 650
+    4 - 450
+    3 - 275
+    2 - 125
+    1 - 0
+     */
+
+
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -182,128 +180,142 @@ public class Qualifier2_RightAutonomous extends LinearOpMode {
 
         if (isStopRequested()) return;
 
-        Trajectory autoTrajectory1 = drive.trajectoryBuilder(startPose)
+        Trajectory traj1 = drive.trajectoryBuilder(startPose)
                 .forward(3.0)
                 .build();
 
-        Trajectory autoTrajectory2 = drive.trajectoryBuilder(autoTrajectory1.end())
+        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
                 .strafeLeft(26.0)
                 .build();
 
-        Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory2.end())
+        Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
                 .lineToLinearHeading(new Pose2d(-11, 28, Math.toRadians(360)),
                         SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
                 .build();
 
-        Trajectory autoTrajectory4 = drive.trajectoryBuilder(autoTrajectory3.end())
-                .forward(3.0)
-                .build();
-
-        Trajectory autoTrajectory5 = drive.trajectoryBuilder(autoTrajectory4.end())
-                .back(3.0)
-                .build();
-
-        Trajectory autoTrajectory6 = drive.trajectoryBuilder(autoTrajectory5.end())
+        Trajectory traj4 = drive.trajectoryBuilder(traj3.end().plus(new Pose2d(0,0, Math.toRadians(-180))))
                 .strafeLeft(16.0)
                 .build();
 
+        Trajectory traj5 = drive.trajectoryBuilder(traj4.end())
+                .lineToLinearHeading(new Pose2d(-55, 12, Math.toRadians(180)))
+                .build();
 
-        // below few trajectories are used for the adjustRobotPositionToJunction
-        strafeLeft1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
-                .strafeLeft(1.0,
+        Trajectory traj6 = drive.trajectoryBuilder(traj5.end())
+                .back(4.0,
                         SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
                 .build();
 
-        strafeRight1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
-                .strafeRight(1.0,
+        Trajectory traj7 = drive.trajectoryBuilder(traj6.end().plus(new Pose2d(0,0, Math.toRadians(-135))))
+                .forward(2.0,
                         SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
                 .build();
 
-        forward1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
-                .forward(1.0,
-                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
-                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
-
-                .build();
-
-        back1 = drive.trajectoryBuilder(new Pose2d(-12, 28, Math.toRadians(360)))
-                .back(1.0,
+        Trajectory traj8 = drive.trajectoryBuilder(traj7.end())
+                .back(2.0,
                         SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
                 .build();
-
-
 
         drive.followTrajectory(
                 // moves forward
-                autoTrajectory1);
+                traj1);
 
         drive.followTrajectory(
                 // strafes left
-                autoTrajectory2);
+                traj2);
 
-        moveLiftToPositionAsync(-3000);
+        moveLiftToPositionAsync(-3700);
 
         drive.followTrajectory(
                 // goes to high junction and drops cone
-                autoTrajectory3);
+                traj3);
 
-        checkLiftInPositionAsync(-3000);
+        checkLiftInPositionAsync(-3700);
 
-
-        Thread.sleep(250);
-
-        //adjustRobotPositionToJunction();
-
-
-        // gripper going down
-        gripperfolder.setPosition(1.0);
-
-        Thread.sleep(2000);
+        Thread.sleep(50);
 
         //open gripper
         gripper.setPosition(0);
 
+        drive.turn(Math.toRadians(-180));
+
+        moveLiftToPositionAsync(-650);
+
+        drive.followTrajectory(
+                // strafes left
+                traj4);
+
+        drive.followTrajectory(
+                //goes to starter stack #1
+                traj5);
+
+        checkLiftInPositionAsync(-650);
+
+        gripper.setPosition(1.0);
         Thread.sleep(250);
 
-        gripperfolder.setPosition(0.0);
-        Thread.sleep(1000);
+        moveLiftToPositionAsync(-1200);
+        drive.followTrajectory(
+                //takes cone #1
+                traj6);
+
+        checkLiftInPositionAsync(-1200);
+
+        sleep(50);
+
+        moveLiftToPositionAsync(-1800);
+
+        drive.turn(Math.toRadians(-135));
+
+        drive.followTrajectory(
+                //forward a little
+                traj7);
+
+        gripper.setPosition(0);
 
         Thread.sleep(50);
-        drive.followTrajectory(
-                // strafes left to parking zones
-                autoTrajectory6);
 
 
+        drive.turn(Math.toRadians(135));
+
+        moveLiftToPositionAsync(-450);
+
+        checkLiftInPositionAsync(-450);
+        gripper.setPosition(1.0);
 
 
         // Actually do something useful
         if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {
 
+            /*
             //trajectory
-            Trajectory zone2 = drive.trajectoryBuilder(autoTrajectory6.end())
+            Trajectory zone2 = drive.trajectoryBuilder()
                     .back(24.0)
                     .build();
 
             drive.followTrajectory(zone2);
 
-        } else if (tagOfInterest.id == RIGHT) {
 
+             */
+        } else if (tagOfInterest.id == RIGHT) {
+            /*
             //trajectory
-            Trajectory zone3 = drive.trajectoryBuilder(autoTrajectory6.end())
+            Trajectory zone3 = drive.trajectoryBuilder()
                     .back(48.0)
                     .build();
 
             drive.followTrajectory(zone3);
 
+
+             */
         }
 
 
@@ -439,6 +451,7 @@ public class Qualifier2_RightAutonomous extends LinearOpMode {
         gripper.setPosition(1);
 
         gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
+        gripperfolder.setPosition(1.0);
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");

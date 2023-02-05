@@ -33,6 +33,8 @@ public class Qualifier2_TeleOp extends LinearOpMode {
 
     final int ttolerance = 25;
 
+    double speedVal = 0.6;
+
 
     //private String gripperPosition;
 
@@ -121,12 +123,23 @@ public class Qualifier2_TeleOp extends LinearOpMode {
             double frontRightPower = (y - x - rx) / denominator;
             double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower * 0.6);
-            backLeft.setPower(backLeftPower * 0.6);
-            frontRight.setPower(frontRightPower * 0.6);
-            backRight.setPower(backRightPower * 0.6);
+            frontLeft.setPower(frontLeftPower * speedVal);
+            backLeft.setPower(backLeftPower * speedVal);
+            frontRight.setPower(frontRightPower * speedVal);
+            backRight.setPower(backRightPower * speedVal);
 
+            if (gamepad1.x) {
 
+                if (speedVal == 0.6) {
+
+                    speedVal = 1.0;
+
+                } else {
+
+                    speedVal = 0.6;
+                }
+
+            }
 
             // for the rest
             if (gamepad2.left_stick_y > 0) {

@@ -173,7 +173,7 @@ public class Qualifier2_LeftAutonomous extends LinearOpMode {
                 .build();
 
         Trajectory autoTrajectory3 = drive.trajectoryBuilder(autoTrajectory2.end())
-                .lineToLinearHeading(new Pose2d(12, 27, Math.toRadians(180)),
+                .lineToLinearHeading(new Pose2d(14, 27, Math.toRadians(180)),
                         SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
