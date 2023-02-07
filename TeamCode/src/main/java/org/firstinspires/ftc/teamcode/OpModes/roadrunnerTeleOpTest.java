@@ -113,16 +113,24 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
                                 .strafeRight(36.0)
                                 .build();
                         Trajectory traj3 = drive.trajectoryBuilder(poseEstimate)
-                                .splineTo(targetAVector, targetAHeading)
+                                .foward(12.0)
                                 .build();
                         Trajectory traj4 = drive.trajectoryBuilder(poseEstimate)
-                                .splineTo(targetAVector0, targetAHeading)
+                                .back(16.0)
+                                .build();
+                        Trajectory traj5 = drive.trajectoryBuilder(poseEstimate)
+                                .strafeLeft(36.0)
+                                .build();
+                        Trajectory traj6 = drive.trajectoryBuilder(poseEstimate)
+                                .foward(12.0)
                                 .build();
 
                         drive.followTrajectoryAsync(traj1);
                         drive.followTrajectoryAsync(traj2);
                         drive.followTrajectoryAsync(traj3);
                         drive.followTrajectoryAsync(traj4);
+                        drive.followTrajectoryAsync(traj5);
+                        drive.followTrajectoryAsync(traj6);
 
                         currentMode = Mode.AUTOMATIC_CONTROL;
                     }
