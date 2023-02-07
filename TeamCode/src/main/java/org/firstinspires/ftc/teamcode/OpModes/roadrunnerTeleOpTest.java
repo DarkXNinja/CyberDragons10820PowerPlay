@@ -48,7 +48,7 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
     Mode currentMode = Mode.DRIVER_CONTROL;
 
     // The coordinates we want the bot to automatically go to when we press the A button
-    Vector2d targetAVector0 = new Vector2d(0, 60);
+    Pose2d startPosition = new Pose2d(0, 60, Math.toRadians(360));
     Vector2d targetAVector = new Vector2d(-24, 48);
     Vector2d targetAVector2 = new Vector2d(0, 12);
     // The heading we want the bot to end on for targetA
@@ -107,10 +107,10 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
                         // We switch the state to AUTOMATIC_CONTROL
 
                         Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
-                                .splineTo(targetAVector, targetAHeading)
+                                .back(16.0)
                                 .build();
                         Trajectory traj2 = drive.trajectoryBuilder(poseEstimate)
-                                .splineTo(targetAVector2, targetAHeading2)
+                                .strafeRight(36.0)
                                 .build();
                         Trajectory traj3 = drive.trajectoryBuilder(poseEstimate)
                                 .splineTo(targetAVector, targetAHeading)
