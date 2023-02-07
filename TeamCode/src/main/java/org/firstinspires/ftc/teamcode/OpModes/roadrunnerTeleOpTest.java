@@ -38,7 +38,7 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDriveCancelable;
  * classes. Please ensure that these files are copied into your own project.
  */
 @TeleOp(group = "advanced")
-public class TeleOpAugmentedDriving extends LinearOpMode {
+public class roadrunnerTeleOpTest extends LinearOpMode {
     // Define 2 states, drive control or automatic control
     enum Mode {
         DRIVER_CONTROL, //player controlling it
