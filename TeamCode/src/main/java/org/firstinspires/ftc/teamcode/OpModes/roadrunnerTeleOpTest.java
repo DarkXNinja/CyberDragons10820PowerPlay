@@ -81,7 +81,7 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
 
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
-
+            
             // Print pose to telemetry
             telemetry.addData("mode", currentMode);
             telemetry.addData("x", poseEstimate.getX());
