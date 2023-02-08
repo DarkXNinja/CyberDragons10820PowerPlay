@@ -638,8 +638,8 @@ public class Qualifier2_TeleOp extends LinearOpMode {
         lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-        lift1.setPower(1.0);
-        lift2.setPower(1.0);
+        lift1.setVelocity(150);
+        lift2.setVelocity(150);
 
         // make sure you call checkListInPosition to make sure lift is in position
     }
