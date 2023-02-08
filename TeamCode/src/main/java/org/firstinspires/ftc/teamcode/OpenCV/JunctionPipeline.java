@@ -24,9 +24,6 @@ public class JunctionPipeline extends OpenCvPipeline {
     public static double strictLowS = 140;
     public static double strictHighS = 255;
 
-    public double[] boxX;
-    public double[] boxY;
-
     public int length = 0;
     public int maxWidth = 0;
     public int maxHeight = 0;
@@ -77,6 +74,7 @@ public class JunctionPipeline extends OpenCvPipeline {
         //apply strict HSV filter onto scaledMask to get rid of any yellow other than pole
         Core.inRange(scaledMask, strictLowHSV, strictHighHSV, scaledThresh);
 
+        /*
         Mat finalMask = new Mat();
         //color in scaledThresh with HSV, output into finalMask(only useful for showing result)(you can delete)
         Core.bitwise_and(mat, mat, finalMask, scaledThresh);
@@ -84,6 +82,9 @@ public class JunctionPipeline extends OpenCvPipeline {
         Mat edges = new Mat();
         //detect edges(only useful for showing result)(you can delete)
         Imgproc.Canny(scaledThresh, edges, 100, 200);
+
+
+         */
 
         //contours, apply post processing to information
         List<MatOfPoint> contours = new ArrayList<>();
@@ -105,7 +106,7 @@ public class JunctionPipeline extends OpenCvPipeline {
 
             // draw red bounding rectangles on mat
             // the mat has been converted to HSV so we need to use HSV as well
-            Imgproc.rectangle(finalMask, boundRect[i], new Scalar(0, 255, 255));
+            Imgproc.rectangle(scaledMask, boundRect[i], new Scalar(0, 255, 255));
 
         }
 
@@ -151,7 +152,7 @@ public class JunctionPipeline extends OpenCvPipeline {
         input.release();
         scaledThresh.copyTo(input);
         scaledThresh.release();
-        scaledMask.release();
+        //scaledMask.release();
         mat.release();
         masked.release();
         //edges.release();
@@ -163,7 +164,7 @@ public class JunctionPipeline extends OpenCvPipeline {
         // note that you must not do thresh.release() if you want to return thresh
         // you also need to release the input if you return thresh(release as much as possible)
 
-        return finalMask;
+        return scaledMask;
     }
 
 
