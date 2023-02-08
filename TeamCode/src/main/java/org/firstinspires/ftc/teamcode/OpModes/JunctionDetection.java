@@ -70,6 +70,8 @@ public class JunctionDetection extends LinearOpMode {
 
         camera.setPipeline(detector);
 
+
+
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
             @Override
@@ -166,6 +168,7 @@ public class JunctionDetection extends LinearOpMode {
                 moveLeft(0.25);
                 while(timer.milliseconds() < 5000) {
                     sleep(100); // this is extremely important to give the OpenCV thread to execute
+                    // need to call function
                     if (checkCameraWithinBounds() == 0) {
                         stopAllWheels();
                         telemetry.addData("Robot has", "reached center.");
@@ -397,4 +400,6 @@ public class JunctionDetection extends LinearOpMode {
         backRight.setPower(-speed);
 
     }
+
+
 }

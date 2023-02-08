@@ -26,6 +26,7 @@ public class Qualifier2_TeleOp extends LinearOpMode {
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
+    private DistanceSensor junctionSensor;
 
     ElapsedTime durationTimer = new ElapsedTime();
 
@@ -92,6 +93,7 @@ public class Qualifier2_TeleOp extends LinearOpMode {
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
+        junctionSensor = hardwareMap.get(DistanceSensor.class, "junctionSensor");
 
         grabberservo.setPosition(1);
         gripperfolder.setPosition(0);
@@ -180,9 +182,11 @@ public class Qualifier2_TeleOp extends LinearOpMode {
             if (durationTimer.milliseconds() > 1000) {
                 telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
                 telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
+                telemetry.addLine("junction distance" + junctionSensor.getDistance(DistanceUnit.INCH));
 
                 telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
                 telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
+
                 telemetry.update();
                 // reset timer
                 durationTimer.reset();

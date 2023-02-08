@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.drive.advanced;
+package org.firstinspires.ftc.teamcode.OpModes;
 
 import com.acmerobotics.roadrunner.geometry.Pose2d;
 import com.acmerobotics.roadrunner.geometry.Vector2d;
@@ -7,8 +7,9 @@ import com.acmerobotics.roadrunner.util.Angle;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 
-import org.firstinspires.ftc.teamcode.drive.SampleMecanumDriveCancelable;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDriveCancelable;
 
 /*
  * This opmode demonstrates how one can augment driver control by following Road Runner arbitrary
@@ -39,6 +40,13 @@ import org.firstinspires.ftc.teamcode.drive.SampleMecanumDriveCancelable;
  */
 @TeleOp(group = "advanced")
 public class roadrunnerTeleOpTest extends LinearOpMode {
+
+    //drivetrain motors
+    public DcMotorEx frontRight;
+    public DcMotorEx backRight;
+    public DcMotorEx frontLeft;
+    public DcMotorEx backLeft;
+
     // Define 2 states, drive control or automatic control
     enum Mode {
         DRIVER_CONTROL, //player controlling it
@@ -69,7 +77,19 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
 
         // Retrieve our pose from the PoseStorage.currentPose static field
         // See AutoTransferPose.java for further details
-        drive.setPoseEstimate(PoseStorage.currentPose);
+        drive.setPoseEstimate(startPosition);
+
+        // setting up drive train
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+
+        frontRight.setPower(0);
+        frontLeft.setPower(0);
+        backRight.setPower(0);
+        backLeft.setPower(0);
+
 
         waitForStart();
 
@@ -81,7 +101,7 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
 
             // Read pose
             Pose2d poseEstimate = drive.getPoseEstimate();
-            
+
             // Print pose to telemetry
             telemetry.addData("mode", currentMode);
             telemetry.addData("x", poseEstimate.getX());
@@ -93,13 +113,29 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
             // control to the automatic mode
             switch (currentMode) {
                 case DRIVER_CONTROL:
-                    drive.setWeightedDrivePower(
-                            new Pose2d(
-                                    -gamepad1.left_stick_y,
-                                    -gamepad1.left_stick_x,
-                                    -gamepad1.right_stick_x
-                            )
-                    );
+                    // for the drive train
+                    double y = gamepad1.left_stick_y; // Remember, this is reversed!
+                    double x = gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
+                    double rx = -gamepad1.right_stick_x * 0.75;
+
+                    // Denominator is the largest motor power (absolute value) or 1
+                    // This ensures all the powers maintain the same ratio, but only when
+                    // at least one is out of  the range [-1, 1]
+
+
+                    // Denominator is the largest motor power (absolute value) or 1
+                    // This ensures all the powers maintain the same ratio, but only when
+                    // at least one is out of the range [-1, 1]
+                    double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+                    double frontLeftPower = (y + x + rx) / denominator;
+                    double backLeftPower = (y - x + rx) / denominator;
+                    double frontRightPower = (y - x - rx) / denominator;
+                    double backRightPower = (y + x - rx) / denominator;
+
+                    frontLeft.setPower(frontLeftPower);
+                    backLeft.setPower(backLeftPower);
+                    frontRight.setPower(frontRightPower);
+                    backRight.setPower(backRightPower);
 
                     if (gamepad1.a) {
                         // If the A button is pressed on gamepad1, we generate a splineTo()
@@ -109,28 +145,28 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
                         Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
                                 .back(16.0)
                                 .build();
-                        Trajectory traj2 = drive.trajectoryBuilder(poseEstimate)
+                        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
                                 .strafeRight(36.0)
                                 .build();
-                        Trajectory traj3 = drive.trajectoryBuilder(poseEstimate)
+                        Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
                                 .forward(12.0)
                                 .build();
-                        Trajectory traj4 = drive.trajectoryBuilder(poseEstimate)
+                        Trajectory traj4 = drive.trajectoryBuilder(traj3.end())
                                 .back(16.0)
                                 .build();
-                        Trajectory traj5 = drive.trajectoryBuilder(poseEstimate)
+                        Trajectory traj5 = drive.trajectoryBuilder(traj4.end())
                                 .strafeLeft(36.0)
                                 .build();
-                        Trajectory traj6 = drive.trajectoryBuilder(poseEstimate)
+                        Trajectory traj6 = drive.trajectoryBuilder(traj5.end())
                                 .forward(12.0)
                                 .build();
 
-                        drive.followTrajectoryAsync(traj1);
-                        drive.followTrajectoryAsync(traj2);
-                        drive.followTrajectoryAsync(traj3);
-                        drive.followTrajectoryAsync(traj4);
-                        drive.followTrajectoryAsync(traj5);
-                        drive.followTrajectoryAsync(traj6);
+                        drive.followTrajectory(traj1);
+                        drive.followTrajectory(traj2);
+                        drive.followTrajectory(traj3);
+                        drive.followTrajectory(traj4);
+                        drive.followTrajectory(traj5);
+                        drive.followTrajectory(traj6);
 
                         currentMode = Mode.AUTOMATIC_CONTROL;
                     }

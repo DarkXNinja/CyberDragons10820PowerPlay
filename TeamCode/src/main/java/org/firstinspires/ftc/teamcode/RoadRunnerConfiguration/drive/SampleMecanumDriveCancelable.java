@@ -1,4 +1,16 @@
-package org.firstinspires.ftc.teamcode.drive;
+package org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive;
+
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.MAX_ACCEL;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.MAX_ANG_ACCEL;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.MAX_ANG_VEL;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.MAX_VEL;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.MOTOR_VELO_PID;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.RUN_USING_ENCODER;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.TRACK_WIDTH;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.encoderTicksToInches;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.kA;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.kStatic;
+import static org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants.kV;
 
 import androidx.annotation.NonNull;
 
@@ -26,26 +38,14 @@ import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.qualcomm.robotcore.hardware.configuration.typecontainers.MotorConfigurationType;
 
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequence;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceBuilder;
-import org.firstinspires.ftc.teamcode.trajectorysequence.TrajectorySequenceRunnerCancelable;
-import org.firstinspires.ftc.teamcode.util.LynxModuleUtil;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.trajectorysequence.TrajectorySequence;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.trajectorysequence.TrajectorySequenceBuilder;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.trajectorysequence.TrajectorySequenceRunnerCancelable;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.util.LynxModuleUtil;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ACCEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_ACCEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_ANG_VEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MAX_VEL;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.MOTOR_VELO_PID;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.RUN_USING_ENCODER;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.TRACK_WIDTH;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.encoderTicksToInches;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kA;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kStatic;
-import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
 
 /*
  * Trajectory-cancelable version of the simple mecanum drive hardware implementation for REV hardware.
@@ -53,8 +53,8 @@ import static org.firstinspires.ftc.teamcode.drive.DriveConstants.kV;
  */
 @Config
 public class SampleMecanumDriveCancelable extends MecanumDrive {
-    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(0, 0, 0);
-    public static PIDCoefficients HEADING_PID = new PIDCoefficients(0, 0, 0);
+    public static PIDCoefficients TRANSLATIONAL_PID = new PIDCoefficients(10, 0, 0);
+    public static PIDCoefficients HEADING_PID = new PIDCoefficients(6, 0, 0);
 
     public static double LATERAL_MULTIPLIER = 1;
 
@@ -69,7 +69,7 @@ public class SampleMecanumDriveCancelable extends MecanumDrive {
 
     private TrajectoryFollower follower;
 
-    private DcMotorEx leftFront, leftRear, rightRear, rightFront;
+    private DcMotorEx frontLeft, backLeft, backRight, frontRight;
     private List<DcMotorEx> motors;
 
     private BNO055IMU imu;
@@ -117,12 +117,14 @@ public class SampleMecanumDriveCancelable extends MecanumDrive {
         // For example, if +Y in this diagram faces downwards, you would use AxisDirection.NEG_Y.
         // BNO055IMUUtil.remapZAxis(imu, AxisDirection.NEG_Y);
 
-        leftFront = hardwareMap.get(DcMotorEx.class, "leftFront");
-        leftRear = hardwareMap.get(DcMotorEx.class, "leftRear");
-        rightRear = hardwareMap.get(DcMotorEx.class, "rightRear");
-        rightFront = hardwareMap.get(DcMotorEx.class, "rightFront");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
 
-        motors = Arrays.asList(leftFront, leftRear, rightRear, rightFront);
+
+
+        motors = Arrays.asList(frontLeft, backLeft, backRight, frontRight);
 
         for (DcMotorEx motor : motors) {
             MotorConfigurationType motorConfigurationType = motor.getMotorType().clone();
@@ -290,10 +292,10 @@ public class SampleMecanumDriveCancelable extends MecanumDrive {
 
     @Override
     public void setMotorPowers(double v, double v1, double v2, double v3) {
-        leftFront.setPower(v);
-        leftRear.setPower(v1);
-        rightRear.setPower(v2);
-        rightFront.setPower(v3);
+        frontLeft.setPower(v);
+        backLeft.setPower(v1);
+        backRight.setPower(v2);
+        frontRight.setPower(v3);
     }
 
     @Override

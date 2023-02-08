@@ -189,7 +189,7 @@ public class States_RightAutonomous extends LinearOpMode {
                 .build();
 
         Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
-                .lineToLinearHeading(new Pose2d(-11, 28, Math.toRadians(360)),
+                .lineToLinearHeading(new Pose2d(-11, 26, Math.toRadians(360)),
                         SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
@@ -224,6 +224,14 @@ public class States_RightAutonomous extends LinearOpMode {
                 )
                 .build();
 
+        Trajectory traj9 = drive.trajectoryBuilder(traj6.end().plus(new Pose2d(0,0, Math.toRadians(135))))
+                .forward(2.0,
+                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
+                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
+                )
+                .build();
+
+
         drive.followTrajectory(
                 // moves forward
                 traj1);
@@ -232,13 +240,13 @@ public class States_RightAutonomous extends LinearOpMode {
                 // strafes left
                 traj2);
 
-        moveLiftToPositionAsync(-3700);
+        moveLiftToPositionAsync(-3800);
 
         drive.followTrajectory(
                 // goes to high junction and drops cone
                 traj3);
 
-        checkLiftInPositionAsync(-3700);
+        checkLiftInPositionAsync(-3800);
 
         Thread.sleep(50);
 
@@ -259,6 +267,7 @@ public class States_RightAutonomous extends LinearOpMode {
 
         checkLiftInPositionAsync(-650);
 
+        // cone 1
         gripper.setPosition(1.0);
         Thread.sleep(250);
 
@@ -281,15 +290,56 @@ public class States_RightAutonomous extends LinearOpMode {
 
         gripper.setPosition(0);
 
-        Thread.sleep(50);
+        Thread.sleep(250);
 
+        drive.followTrajectory(
+                //backward a little
+                traj8);
 
         drive.turn(Math.toRadians(135));
 
+        // cone 2
         moveLiftToPositionAsync(-450);
 
+        drive.followTrajectory(
+                //forward a little
+                traj9);
+
         checkLiftInPositionAsync(-450);
+
         gripper.setPosition(1.0);
+
+        gripper.setPosition(1.0);
+        Thread.sleep(250);
+
+        moveLiftToPositionAsync(-1000);
+        drive.followTrajectory(
+                //takes cone #2
+                traj6);
+
+        checkLiftInPositionAsync(-1000);
+
+        sleep(50);
+
+        moveLiftToPositionAsync(-1800);
+
+        drive.turn(Math.toRadians(-135));
+
+        drive.followTrajectory(
+                //forward a little
+                traj7);
+
+        gripper.setPosition(0);
+
+        Thread.sleep(250);
+
+        drive.followTrajectory(
+                //backward a little
+                traj8);
+
+        drive.turn(Math.toRadians(135));
+
+
 
 
         // Actually do something useful
