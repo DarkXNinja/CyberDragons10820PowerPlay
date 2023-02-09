@@ -143,6 +143,10 @@ public class SampleMecanumDriveCancelable extends MecanumDrive {
         }
 
         // TODO: reverse any motors using DcMotor.setDirection()
+        frontRight.setDirection(DcMotorEx.Direction.FORWARD);
+        backRight.setDirection(DcMotorEx.Direction.FORWARD);
+        frontLeft.setDirection(DcMotorEx.Direction.REVERSE);
+        backLeft.setDirection(DcMotorEx.Direction.REVERSE);
 
         // TODO: if desired, use setLocalizer() to change the localization method
         // for instance, setLocalizer(new ThreeTrackingWheelLocalizer(...));
