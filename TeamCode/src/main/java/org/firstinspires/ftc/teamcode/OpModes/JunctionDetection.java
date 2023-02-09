@@ -11,6 +11,7 @@ import com.qualcomm.robotcore.util.ElapsedTime;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.OpenCV.JunctionPipeline;
+import org.firstinspires.ftc.teamcode.OpenCV.SimpleJunctionPipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
@@ -29,7 +30,7 @@ public class JunctionDetection extends LinearOpMode {
 
     public DistanceSensor rightPole;
 
-    JunctionPipeline detector ;
+    SimpleJunctionPipeline detector ;
 
     public int avgX;
     public int screenWidth = 320;
@@ -66,10 +67,9 @@ public class JunctionDetection extends LinearOpMode {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, webcamName), cameraMonitorViewId);
 
-        detector = new JunctionPipeline();
+        detector = new SimpleJunctionPipeline();
 
         camera.setPipeline(detector);
-
 
 
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
@@ -109,9 +109,11 @@ public class JunctionDetection extends LinearOpMode {
 
         if (opModeIsActive()) {
 
+            camera.pauseViewport(); // this reduces CPU/battery load
+
             centerRobotCamera();
             //adjustRobotCaDistance() ; // use sensor
-            adjustRobotCameraDistance() ; // use camera for distance
+            //adjustRobotCameraDistance() ; // use camera for distance
 
 
         }

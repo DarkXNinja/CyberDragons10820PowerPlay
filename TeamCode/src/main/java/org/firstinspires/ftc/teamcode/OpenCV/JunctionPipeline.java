@@ -24,6 +24,18 @@ public class JunctionPipeline extends OpenCvPipeline {
     public static double strictLowS = 140;
     public static double strictHighS = 255;
 
+    // create instance variables for the mats that need to be used
+    // do not use local variables; reduces CPU load
+    // and also ensures that you eliminate the possibility of forgetting to call release
+    Mat mat = new Mat() ;
+    Mat thresh = new Mat();
+    Mat masked = new Mat();
+    Mat scaledMask = new Mat();
+    Mat scaledThresh = new Mat();
+    Mat finalMask = new Mat();
+    Mat hierarchy = new Mat();
+    Mat edges = new Mat();
+
     public int length = 0;
     public int maxWidth = 0;
     public int maxHeight = 0;
@@ -32,15 +44,15 @@ public class JunctionPipeline extends OpenCvPipeline {
     public Point topLeftCoordinate;
     public Point bottomRightCoordinate;
 
+
     public JunctionPipeline() {
         frameList = new ArrayList<>();
     }
 
     @Override
     public Mat processFrame(Mat input) {
-        Mat mat = new Mat();
 
-        //mat turns into HSV value
+        //turn input to hsv; input -> mat
         Imgproc.cvtColor(input, mat, Imgproc.COLOR_RGB2HSV);
         if (mat.empty()) {
             return input;
@@ -50,46 +62,42 @@ public class JunctionPipeline extends OpenCvPipeline {
         Scalar lowHSV = new Scalar(20, 70, 80); // lenient lower bound HSV for yellow
         Scalar highHSV = new Scalar(32, 255, 255); // lenient higher bound HSV for yellow
 
-        Mat thresh = new Mat();
-
         // Get a black and white image of yellow objects
+        // pixels that are within filter bounds have value 255, and those outside range are black
+        // mat -> thresh
         Core.inRange(mat, lowHSV, highHSV, thresh);
 
-        Mat masked = new Mat();
         //color the white portion of thresh in with HSV from mat
-        //output into masked
+        //(mat, thresh) -> masked
         Core.bitwise_and(mat, mat, masked, thresh);
+
         //calculate average HSV values of the white thresh values
         Scalar average = Core.mean(masked, thresh);
 
-        Mat scaledMask = new Mat();
         //scale the average saturation to 150
+        // masked -> scaledMask
         masked.convertTo(scaledMask, -1, 150 / average.val[1], 0);
 
 
-        Mat scaledThresh = new Mat();
         //you probably want to tune this
         Scalar strictLowHSV = new Scalar(0, strictLowS, 0); //strict lower bound HSV for yellow
         Scalar strictHighHSV = new Scalar(255, strictHighS, 255); //strict higher bound HSV for yellow
         //apply strict HSV filter onto scaledMask to get rid of any yellow other than pole
+        // scaledMask -> scaledThresh
         Core.inRange(scaledMask, strictLowHSV, strictHighHSV, scaledThresh);
 
-        /*
-        Mat finalMask = new Mat();
         //color in scaledThresh with HSV, output into finalMask(only useful for showing result)(you can delete)
+        // scaledThresh -> finalMask
         Core.bitwise_and(mat, mat, finalMask, scaledThresh);
 
-        Mat edges = new Mat();
         //detect edges(only useful for showing result)(you can delete)
+        // scaledThresh -> edges
         Imgproc.Canny(scaledThresh, edges, 100, 200);
-
-
-         */
 
         //contours, apply post processing to information
         List<MatOfPoint> contours = new ArrayList<>();
-        Mat hierarchy = new Mat();
         //find contours, input scaledThresh because it has hard edges
+        // scaledThresh -> hierarchy
         Imgproc.findContours(scaledThresh, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
 
         //bounding boxes
@@ -149,14 +157,14 @@ public class JunctionPipeline extends OpenCvPipeline {
 
 
         //release all the data
-        input.release();
-        scaledThresh.copyTo(input);
-        scaledThresh.release();
+        //input.release();
+        //scaledThresh.copyTo(input);
+        //scaledThresh.release();
         //scaledMask.release();
-        mat.release();
-        masked.release();
+        //mat.release();
+        //masked.release();
         //edges.release();
-        thresh.release();
+        //thresh.release();
         //finalMask.release();
         //change the return to whatever mat you want
         //for example, if I want to look at the lenient thresh:
@@ -164,7 +172,7 @@ public class JunctionPipeline extends OpenCvPipeline {
         // note that you must not do thresh.release() if you want to return thresh
         // you also need to release the input if you return thresh(release as much as possible)
 
-        return scaledMask;
+        return scaledMask ;
     }
 
 
