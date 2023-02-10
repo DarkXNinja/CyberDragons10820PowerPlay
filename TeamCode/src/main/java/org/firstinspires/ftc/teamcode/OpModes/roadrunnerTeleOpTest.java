@@ -146,19 +146,19 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
                                 .back(16.0)
                                 .build();
 
-                        Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
+                        Trajectory traj2 = drive.trajectoryBuilder(new Pose2d())
                                 .strafeRight(36.0)
                                 .build();
-                        Trajectory traj3 = drive.trajectoryBuilder(traj2.end())
+                        Trajectory traj3 = drive.trajectoryBuilder(new Pose2d())
                                 .forward(12.0)
                                 .build();
-                        Trajectory traj4 = drive.trajectoryBuilder(traj3.end())
+                        Trajectory traj4 = drive.trajectoryBuilder(new Pose2d())
                                 .back(16.0)
                                 .build();
-                        Trajectory traj5 = drive.trajectoryBuilder(traj4.end())
+                        Trajectory traj5 = drive.trajectoryBuilder(new Pose2d())
                                 .strafeLeft(36.0)
                                 .build();
-                        Trajectory traj6 = drive.trajectoryBuilder(traj5.end())
+                        Trajectory traj6 = drive.trajectoryBuilder(new Pose2d())
                                 .forward(12.0)
                                 .build();
 
