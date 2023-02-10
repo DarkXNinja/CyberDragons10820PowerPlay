@@ -210,8 +210,8 @@ public class States_RightAutonomous extends LinearOpMode {
                 )
                 .build();
 
-        Trajectory traj7 = drive.trajectoryBuilder(traj6.end().plus(new Pose2d(0,0, Math.toRadians(-135))))
-                .forward(2.0,
+        Trajectory traj7 = drive.trajectoryBuilder(traj6.end().plus(new Pose2d(0,0, Math.toRadians(-130))))
+                .forward(1.0,
                         SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
                 )
@@ -224,7 +224,7 @@ public class States_RightAutonomous extends LinearOpMode {
                 )
                 .build();
 
-        Trajectory traj9 = drive.trajectoryBuilder(traj6.end().plus(new Pose2d(0,0, Math.toRadians(135))))
+        Trajectory traj9 = drive.trajectoryBuilder(traj8.end().plus(new Pose2d(0,0, Math.toRadians(145))))
                 .forward(2.0,
                         SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
                         SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
@@ -282,7 +282,7 @@ public class States_RightAutonomous extends LinearOpMode {
 
         moveLiftToPositionAsync(-1800);
 
-        drive.turn(Math.toRadians(-135));
+        drive.turn(Math.toRadians(-130));
 
         drive.followTrajectory(
                 //forward a little
@@ -296,16 +296,18 @@ public class States_RightAutonomous extends LinearOpMode {
                 //backward a little
                 traj8);
 
-        drive.turn(Math.toRadians(135));
+        drive.turn(Math.toRadians(145));
 
         // cone 2
         moveLiftToPositionAsync(-450);
+        checkLiftInPositionAsync(-450);
+
+        Thread.sleep(250);
 
         drive.followTrajectory(
                 //forward a little
                 traj9);
 
-        checkLiftInPositionAsync(-450);
 
         gripper.setPosition(1.0);
 
@@ -323,7 +325,7 @@ public class States_RightAutonomous extends LinearOpMode {
 
         moveLiftToPositionAsync(-1800);
 
-        drive.turn(Math.toRadians(-135));
+        drive.turn(Math.toRadians(-130));
 
         drive.followTrajectory(
                 //forward a little
@@ -337,35 +339,31 @@ public class States_RightAutonomous extends LinearOpMode {
                 //backward a little
                 traj8);
 
-        drive.turn(Math.toRadians(135));
-
-
-
+        drive.turn(Math.toRadians(-45));
 
         // Actually do something useful
         if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {
 
-            /*
-            //trajectory
-            Trajectory zone2 = drive.trajectoryBuilder()
-                    .back(24.0)
+
+            Trajectory zone2 = drive.trajectoryBuilder(new Pose2d(-72, 12, Math.toRadians(360)))
+                    .forward(12.0)
                     .build();
 
             drive.followTrajectory(zone2);
 
 
-             */
-        } else if (tagOfInterest.id == RIGHT) {
-            /*
-            //trajectory
-            Trajectory zone3 = drive.trajectoryBuilder()
-                    .back(48.0)
+
+        } else if (tagOfInterest.id == LEFT) {
+
+
+            Trajectory zone1 = drive.trajectoryBuilder(new Pose2d(72, 12, Math.toRadians(360)))
+                    .forward(24.0)
                     .build();
 
-            drive.followTrajectory(zone3);
+            drive.followTrajectory(zone1);
 
 
-             */
+
         }
 
 

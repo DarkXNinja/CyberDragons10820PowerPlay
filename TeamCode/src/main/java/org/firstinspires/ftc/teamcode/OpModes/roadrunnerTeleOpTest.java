@@ -142,9 +142,10 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
                         // trajectory on the fly and follow it
                         // We switch the state to AUTOMATIC_CONTROL
 
-                        Trajectory traj1 = drive.trajectoryBuilder(poseEstimate)
+                        Trajectory traj1 = drive.trajectoryBuilder(new Pose2d())
                                 .back(16.0)
                                 .build();
+
                         Trajectory traj2 = drive.trajectoryBuilder(traj1.end())
                                 .strafeRight(36.0)
                                 .build();
@@ -161,12 +162,12 @@ public class roadrunnerTeleOpTest extends LinearOpMode {
                                 .forward(12.0)
                                 .build();
 
-                        drive.followTrajectory(traj1);
-                        drive.followTrajectory(traj2);
-                        drive.followTrajectory(traj3);
-                        drive.followTrajectory(traj4);
-                        drive.followTrajectory(traj5);
-                        drive.followTrajectory(traj6);
+                        drive.followTrajectoryAsync(traj1);
+                        //drive.followTrajectory(traj2);
+                        //drive.followTrajectory(traj3);
+                        //drive.followTrajectory(traj4);
+                        //drive.followTrajectory(traj5);
+                        //drive.followTrajectory(traj6);
 
                         currentMode = Mode.AUTOMATIC_CONTROL;
                     }
