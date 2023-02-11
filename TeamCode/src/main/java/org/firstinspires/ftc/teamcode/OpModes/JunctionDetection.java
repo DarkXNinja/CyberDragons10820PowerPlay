@@ -29,6 +29,7 @@ public class JunctionDetection extends LinearOpMode {
     private Servo gripperfolder;
 
     public DistanceSensor rightPole;
+    private DistanceSensor junctionSensor;
 
     SimpleJunctionPipeline detector ;
 
@@ -53,12 +54,13 @@ public class JunctionDetection extends LinearOpMode {
         backRight.setDirection(DcMotorEx.Direction.REVERSE);
 
         gripper = hardwareMap.get(Servo.class, "GrabberServo");
-        gripper.setPosition(1);
+        closeGripper(); // closeGripper
 
         gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
+        upGripper(); // up gripper
 
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
-
+        junctionSensor = hardwareMap.get(DistanceSensor.class, "junctionSensor");
 
         OpenCvCamera camera;
         String webcamName = "Webcam 1";
@@ -88,8 +90,6 @@ public class JunctionDetection extends LinearOpMode {
 
         while (!isStarted()) {
 
-
-
             telemetry.addData("number of bounding boxes: ", detector.length);
 
             // displays bounding box info
@@ -98,10 +98,8 @@ public class JunctionDetection extends LinearOpMode {
             telemetry.addData("\nTop-Left Corner: ", detector.topLeftCoordinate);
             telemetry.addData("Bottom-Right Corner: ", detector.bottomRightCoordinate);
             telemetry.addData("Right Pole: ", " " + rightPole.getDistance(DistanceUnit.INCH));
+            telemetry.addData("Junction: ", " " + junctionSensor.getDistance(DistanceUnit.INCH));
             telemetry.update();
-
-
-
 
         }
 
@@ -112,9 +110,22 @@ public class JunctionDetection extends LinearOpMode {
             camera.pauseViewport(); // this reduces CPU/battery load
 
             centerRobotCamera();
-            //adjustRobotCaDistance() ; // use sensor
+            // if centered successfully; then stop streaming
+            camera.stopStreaming();
+            sleep(1000) ;
+
+            adjustRobotDistance() ; // distance use sensor
             //adjustRobotCameraDistance() ; // use camera for distance
 
+            // down and open gripper
+            downGripper();
+            sleep(1000) ;
+            openGripper();
+
+            // just to get it back
+            sleep(500) ;
+            upGripper();
+            closeGripper();
 
         }
         sleep(10000) ;
@@ -264,8 +275,8 @@ public class JunctionDetection extends LinearOpMode {
     private int checkDistancetoJunction() {
         double pdist ;
         // it should be within range from the junction pole
-        double minDist = 5.5, maxDist = 7.5;
-        pdist = rightPole.getDistance(DistanceUnit.INCH) ;
+        double minDist = 10.5, maxDist = 11.5;
+        pdist = junctionSensor.getDistance(DistanceUnit.INCH) ;
         if ((pdist >= minDist) && (pdist <= maxDist))
             return 0;
         else {
@@ -288,7 +299,7 @@ public class JunctionDetection extends LinearOpMode {
         } else {
             if (retdist < 0) {
                 timer.reset();
-                moveBackward(0.25);
+                moveBackwardVelocity(100);
                 while (timer.milliseconds() < 5000) {
                     if (checkDistancetoJunction() == 0) {
                         stopAllWheels();
@@ -302,7 +313,7 @@ public class JunctionDetection extends LinearOpMode {
 
             } else {
                 timer.reset();
-                moveForward(0.25);
+                moveForwardVelocity(100);
                 while (timer.milliseconds() < 5000) {
                     if (checkDistancetoJunction() == 0) {
                         stopAllWheels();
@@ -365,9 +376,12 @@ public class JunctionDetection extends LinearOpMode {
         frontRight.setPower(speed);
         backLeft.setPower(speed);
         backRight.setPower(speed);
-
-
-
+    }
+    void moveBackwardVelocity(double speed) {
+        frontLeft.setVelocity(speed);
+        frontRight.setVelocity(speed);
+        backLeft.setVelocity(speed);
+        backRight.setVelocity(speed);
     }
 
     void moveForward(double speed) {
@@ -375,7 +389,12 @@ public class JunctionDetection extends LinearOpMode {
         frontRight.setPower(-speed);
         backLeft.setPower(-speed);
         backRight.setPower(-speed);
-
+    }
+    void moveForwardVelocity(double speed) {
+        frontLeft.setVelocity(-speed);
+        frontRight.setVelocity(-speed);
+        backLeft.setVelocity(-speed);
+        backRight.setVelocity(-speed);
     }
 
     void moveLeft(double speed) {
@@ -383,16 +402,12 @@ public class JunctionDetection extends LinearOpMode {
         frontRight.setPower(-speed);
         backLeft.setPower(-speed);
         backRight.setPower(speed);
-
     }
-
-    void stopAllWheels() {
-
-        frontLeft.setPower(0.0);
-        frontRight.setPower(0.0);
-        backLeft.setPower(0.0);
-        backRight.setPower(0.0);
-
+    void moveLeftVelocity(double speed) {
+        frontLeft.setVelocity(speed);
+        frontRight.setVelocity(-speed);
+        backLeft.setVelocity(-speed);
+        backRight.setVelocity(speed);
     }
 
     void moveRight(double speed)  {
@@ -400,8 +415,32 @@ public class JunctionDetection extends LinearOpMode {
         frontRight.setPower(speed);
         backLeft.setPower(speed);
         backRight.setPower(-speed);
-
+    }
+    void moveRightVelocity(double speed)  {
+        frontLeft.setVelocity(-speed);
+        frontRight.setVelocity(speed);
+        backLeft.setVelocity(speed);
+        backRight.setVelocity(-speed);
     }
 
+    void stopAllWheels() {
+        frontLeft.setPower(0.0);
+        frontRight.setPower(0.0);
+        backLeft.setPower(0.0);
+        backRight.setPower(0.0);
+    }
+
+    private void openGripper() {
+        gripper.setPosition(0); // open gripper
+    }
+    private void closeGripper() {
+        gripper.setPosition(1); // close gripper
+    }
+    private void upGripper() {
+        gripperfolder.setPosition(0); // up gripper
+    }
+    private void downGripper() {
+        gripperfolder.setPosition(1); // down gripper
+    }
 
 }

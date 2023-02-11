@@ -4,28 +4,34 @@ import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.OpenCV.ConePipeline;
+import org.firstinspires.ftc.teamcode.OpenCV.SimpleConePipeline;
 import org.openftc.easyopencv.OpenCvCamera;
 import org.openftc.easyopencv.OpenCvCameraFactory;
 import org.openftc.easyopencv.OpenCvCameraRotation;
 
-
 @Autonomous
 public class ConeDetector extends LinearOpMode {
+
     //drivetrain motors
     public DcMotorEx frontRight;
     public DcMotorEx backRight;
     public DcMotorEx frontLeft;
     public DcMotorEx backLeft;
 
+    private Servo gripper;
+    private Servo gripperfolder;
+
     public DistanceSensor rightPole;
 
-    ConePipeline detector ;
+    SimpleConePipeline detector ;
 
     public int avgX;
     public int screenWidth = 320;
@@ -47,6 +53,15 @@ public class ConeDetector extends LinearOpMode {
         frontRight.setDirection(DcMotorEx.Direction.REVERSE);
         backRight.setDirection(DcMotorEx.Direction.REVERSE);
 
+        gripper = hardwareMap.get(Servo.class, "GrabberServo");
+        closeGripper(); // closeGripper
+
+        gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
+        upGripper(); // up gripper
+
+        rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
+
+
         OpenCvCamera camera;
         String webcamName = "Webcam 1";
 
@@ -54,9 +69,10 @@ public class ConeDetector extends LinearOpMode {
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
         camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, webcamName), cameraMonitorViewId);
 
-        detector = new ConePipeline();
+        detector = new SimpleConePipeline();
 
         camera.setPipeline(detector);
+
 
         camera.openCameraDeviceAsync(new OpenCvCamera.AsyncCameraOpenListener()
         {
@@ -83,6 +99,7 @@ public class ConeDetector extends LinearOpMode {
             telemetry.addData("Height value: ", detector.maxHeight);
             telemetry.addData("\nTop-Left Corner: ", detector.topLeftCoordinate);
             telemetry.addData("Bottom-Right Corner: ", detector.bottomRightCoordinate);
+            telemetry.addData("Right Pole: ", " " + rightPole.getDistance(DistanceUnit.INCH));
             telemetry.update();
 
 
@@ -94,11 +111,28 @@ public class ConeDetector extends LinearOpMode {
 
         if (opModeIsActive()) {
 
+            camera.pauseViewport(); // this reduces CPU/battery load
+
             centerRobotCamera();
+            camera.stopStreaming();
 
+            openGripper();
+            sleep(1000) ;
+            adjustRobotDistance() ; // use sensor
+            //adjustRobotCameraDistance() ; // or use camera for distance ; ensure streaming continues
 
+            downGripper();
+            sleep(2000) ;
+
+            // you should be close to cone now
+            // close gripper and lift up
+            closeGripper();
+            sleep(1000) ;
+            upGripper();
+            sleep(2000) ;
 
         }
+        sleep(10000) ;
     }
 
     // function for checking if camera is within bounds
@@ -112,6 +146,12 @@ public class ConeDetector extends LinearOpMode {
         int rmscreen = midScreen + sTolerance ;
 
         avgX = (detector.maxWidth/2) + detector.x;
+
+        telemetry.addData("lmscreen:", " " + lmscreen + " rmscreen: " + rmscreen);
+
+        // displays bounding box info
+        telemetry.addData("\nWidth value:", " " + detector.maxWidth + " x value: " + detector.x + " avgX: " + avgX);
+        //telemetry.update();
 
         // if it is mostly centered then
         if ((avgX >= lmscreen) && (avgX <= rmscreen)) {
@@ -137,14 +177,77 @@ public class ConeDetector extends LinearOpMode {
         }
         else {
             if (rpos < 0) {
-                moveRight(0.5);
-                telemetry.addData("Robot is ", "moving right.");
-            } else {
-                moveLeft(0.5);
                 telemetry.addData("Robot is ", "moving left.");
+                //telemetry.update();
+
+                // for some reason using timer is not working
+                timer.reset() ;
+                moveLeft(0.25);
+                while(timer.milliseconds() < 5000) {
+                    sleep(100); // this is extremely important to give the OpenCV thread to execute
+                    // need to call function
+                    if (checkCameraWithinBounds() == 0) {
+                        stopAllWheels();
+                        telemetry.addData("Robot has", "reached center.");
+                        telemetry.update() ;
+                        break ;
+                    }
+                }
+                stopAllWheels();
+
+                /*
+                for(int i=0;i<10;i++) {
+                    moveLeft(0.5);
+                    sleep(50) ;
+                    stopAllWheels();
+                    sleep(50) ;
+                    if (checkCameraWithinBounds() == 0) {
+                        telemetry.addData("Robot has", "reached center.");
+                        //telemetry.update() ;
+                        break ;
+                    }
+                    //sleep (5000) ;
+                }
+                 */
+
+            } else {
+                telemetry.addData("Robot is ", "moving right.");
+                //telemetry.update();
+
+
+                timer.reset() ;
+                moveRight(0.25);
+                while(timer.milliseconds() < 5000) {
+                    sleep(100);// this is extremely important to give the OpenCV thread to execute
+                    if (checkCameraWithinBounds() == 0) {
+                        stopAllWheels();
+                        telemetry.addData("Robot has", "reached center.");
+                        telemetry.update() ;
+                        break ;
+                    }
+
+                }
+                stopAllWheels();
+
+                /*
+                for(int i=0;i<10;i++) {
+                    moveRight(0.5);
+                    sleep(50);
+                    stopAllWheels();
+                    sleep(50);
+                    if (checkCameraWithinBounds() == 0) {
+                        telemetry.addData("Robot has", "reached center.");
+                        //telemetry.update();
+                        break;
+                    }
+                    //sleep(5000);
+                }
+                 */
+
             }
         }
 
+        /*
         while (timer.milliseconds() < 5000) {
             if (checkCameraWithinBounds() == 0) {
                 stopAllWheels();
@@ -153,11 +256,125 @@ public class ConeDetector extends LinearOpMode {
                 break;
             }
         }
-
-        stopAllWheels();
-        telemetry.addData("Robot has", "reached time limit.");
+        */
         telemetry.update() ;
+        stopAllWheels();
+    }
 
+    private int checkCameraDistancetoCone() {
+        int pwidth ;
+        // it should be within range from the junction pole
+        int minWidth = 55, maxWidth = 65;
+        pwidth = detector.maxWidth ;
+        if ((pwidth >= minWidth) && (pwidth <= maxWidth))
+            return 0;
+        else {
+            if (pwidth < minWidth) // too far
+                return -1 ;
+            else // too close
+                return 1;
+        }
+    }
+
+    private int checkDistancetoCone() {
+        double pdist ;
+        // it should be within range from the junction pole
+        double minDist = 8.75, maxDist = 9.25;
+        pdist = rightPole.getDistance(DistanceUnit.INCH) ;
+        if ((pdist >= minDist) && (pdist <= maxDist))
+            return 0;
+        else {
+            if (pdist < minDist) // too close
+                return -1 ;
+            else // too far
+                return 1;
+        }
+    }
+
+    public void adjustRobotDistance() {
+
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset() ;
+
+        int retdist = checkDistancetoCone() ;
+
+        if ( retdist == 0) {
+            // nothing else to do
+        } else {
+            if (retdist < 0) {
+                timer.reset();
+                //moveBackward(0.1); // only use lower speed otherwise it overshoots
+                moveBackwardVelocity(100);
+                while (timer.milliseconds() < 5000) {
+                    if (checkDistancetoCone() == 0) {
+                        stopAllWheels();
+                        telemetry.addData("Robot is", "good distance from junction.");
+                        telemetry.update();
+                        break;
+                    }
+
+                }
+                stopAllWheels();
+
+            } else {
+                timer.reset();
+                //moveForward(0.1);// only use lower speed otherwise it overshoots
+                moveForwardVelocity(100);
+                while (timer.milliseconds() < 5000) {
+                    if (checkDistancetoCone() == 0) {
+                        stopAllWheels();
+                        telemetry.addData("Robot is", "good distance from junction.");
+                        telemetry.update();
+                        break;
+                    }
+
+                }
+                stopAllWheels();
+            }
+        }
+    }
+
+    public void adjustRobotCameraDistance() {
+
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset() ;
+
+        int retdist = checkCameraDistancetoCone() ;
+
+        if ( retdist == 0) {
+            // nothing else to do
+        } else {
+            if (retdist < 0) {
+                timer.reset();
+                moveForward(0.25);
+                while (timer.milliseconds() < 5000) {
+                    sleep(100);// this is extremely important to give the OpenCV thread to execute
+                    if (checkCameraDistancetoCone() == 0) {
+                        stopAllWheels();
+                        telemetry.addData("Robot is", "good distance from junction.");
+                        telemetry.update();
+                        break;
+                    }
+
+                }
+                stopAllWheels();
+
+            } else {
+                timer.reset();
+                moveBackward(0.25);
+                while (timer.milliseconds() < 5000) {
+                    sleep(100);// this is extremely important to give the OpenCV thread to execute
+                    if (checkCameraDistancetoCone() == 0) {
+                        stopAllWheels();
+                        telemetry.addData("Robot is", "good distance from junction.");
+                        telemetry.update();
+                        break;
+                    }
+
+                }
+                stopAllWheels();
+            }
+        }
     }
 
     void moveBackward(double speed) {
@@ -165,9 +382,12 @@ public class ConeDetector extends LinearOpMode {
         frontRight.setPower(speed);
         backLeft.setPower(speed);
         backRight.setPower(speed);
-
-
-
+    }
+    void moveBackwardVelocity(double speed) {
+        frontLeft.setVelocity(speed);
+        frontRight.setVelocity(speed);
+        backLeft.setVelocity(speed);
+        backRight.setVelocity(speed);
     }
 
     void moveForward(double speed) {
@@ -175,7 +395,12 @@ public class ConeDetector extends LinearOpMode {
         frontRight.setPower(-speed);
         backLeft.setPower(-speed);
         backRight.setPower(-speed);
-
+    }
+    void moveForwardVelocity(double speed) {
+        frontLeft.setVelocity(-speed);
+        frontRight.setVelocity(-speed);
+        backLeft.setVelocity(-speed);
+        backRight.setVelocity(-speed);
     }
 
     void moveLeft(double speed) {
@@ -183,16 +408,12 @@ public class ConeDetector extends LinearOpMode {
         frontRight.setPower(-speed);
         backLeft.setPower(-speed);
         backRight.setPower(speed);
-
     }
-
-    void stopAllWheels() {
-
-        frontLeft.setPower(0.0);
-        frontRight.setPower(0.0);
-        backLeft.setPower(0.0);
-        backRight.setPower(0.0);
-
+    void moveLeftVelocity(double speed) {
+        frontLeft.setVelocity(speed);
+        frontRight.setVelocity(-speed);
+        backLeft.setVelocity(-speed);
+        backRight.setVelocity(speed);
     }
 
     void moveRight(double speed)  {
@@ -200,7 +421,32 @@ public class ConeDetector extends LinearOpMode {
         frontRight.setPower(speed);
         backLeft.setPower(speed);
         backRight.setPower(-speed);
+    }
+    void moveRightVelocity(double speed)  {
+        frontLeft.setVelocity(-speed);
+        frontRight.setVelocity(speed);
+        backLeft.setVelocity(speed);
+        backRight.setVelocity(-speed);
+    }
 
+    void stopAllWheels() {
+        frontLeft.setPower(0.0);
+        frontRight.setPower(0.0);
+        backLeft.setPower(0.0);
+        backRight.setPower(0.0);
+    }
+
+    private void openGripper() {
+        gripper.setPosition(0); // open gripper
+    }
+    private void closeGripper() {
+        gripper.setPosition(1); // close gripper
+    }
+    private void upGripper() {
+        gripperfolder.setPosition(0); // up gripper
+    }
+    private void downGripper() {
+        gripperfolder.setPosition(1); // down gripper
     }
 
 }
