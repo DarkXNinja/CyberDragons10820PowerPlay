@@ -10,8 +10,12 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+// This is essentially Qualifier2_TeleOp
+// This does not use RoadRunner
+// All changes should be documented here
+
 @TeleOp
-public class Qualifier2_TeleOp extends LinearOpMode {
+public class States_TeleOp extends LinearOpMode {
 
     //drivetrain motors
     public DcMotorEx frontRight;
@@ -221,36 +225,36 @@ public class Qualifier2_TeleOp extends LinearOpMode {
     }
 
     void moveLiftToPosition(int pos) {
-      int tposition = pos;
-      final int ttolerance = 25;
-      int thigher = tposition - ttolerance;
-      int tlower = tposition + ttolerance;
+        int tposition = pos;
+        final int ttolerance = 25;
+        int thigher = tposition - ttolerance;
+        int tlower = tposition + ttolerance;
 
-      lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-      lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-      lift1.setTargetPosition(tposition);
-      lift1.setTargetPositionTolerance(ttolerance);
-      lift2.setTargetPosition(tposition);
-      lift2.setTargetPositionTolerance(ttolerance);
+        lift1.setTargetPosition(tposition);
+        lift1.setTargetPositionTolerance(ttolerance);
+        lift2.setTargetPosition(tposition);
+        lift2.setTargetPositionTolerance(ttolerance);
 
-      lift1.setPower(1.0);
-      lift2.setPower(1.0);
+        lift1.setPower(1.0);
+        lift2.setPower(1.0);
 
-      while (true) {
-        int lift1position = lift1.getCurrentPosition();
-        int lift2position = lift2.getCurrentPosition();
+        while (true) {
+            int lift1position = lift1.getCurrentPosition();
+            int lift2position = lift2.getCurrentPosition();
 
-        if ( ((lift1position < tlower) && (lift1position > thigher)) ||
-                ((lift2position < tlower) && (lift2position > thigher)) ) {
+            if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+                    ((lift2position < tlower) && (lift2position > thigher)) ) {
 
-          lift1.setPower(0.0);
-          lift2.setPower(0.0);
-          break;
+                lift1.setPower(0.0);
+                lift2.setPower(0.0);
+                break;
+            }
         }
-      }
 
-      // this is not async ; so keep it driver controlled
+        // this is not async ; so keep it driver controlled
         lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
         lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
         currentLiftMode = LiftMode.DRIVER_CONTROL ;

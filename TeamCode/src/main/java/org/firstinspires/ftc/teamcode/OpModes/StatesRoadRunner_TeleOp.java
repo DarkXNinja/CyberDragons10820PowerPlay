@@ -1,5 +1,8 @@
 package org.firstinspires.ftc.teamcode.OpModes;
 
+import com.acmerobotics.roadrunner.geometry.Pose2d;
+import com.acmerobotics.roadrunner.geometry.Vector2d;
+import com.acmerobotics.roadrunner.trajectory.Trajectory;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -9,43 +12,66 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDriveCancelable;
+
+
+// This is essentially Qualifier2_TeleOp
+// This uses RoadRunner
 
 @TeleOp
-public class Qualifier2_TeleOp extends LinearOpMode {
+public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
-    //drivetrain motors
-    public DcMotorEx frontRight;
-    public DcMotorEx backRight;
-    public DcMotorEx frontLeft;
-    public DcMotorEx backLeft;
+    // all drive vars here
+    //use the Cancellable RoadRunner and put all variables on this here
+    SampleMecanumDriveCancelable drive;
+    double speedVal = 0.6;
+    enum DriveMode {
+        DRIVER_CONTROL, //player controlling it
+        AUTOMATIC_CONTROL //Robot controlling it
+    }
+    DriveMode currentDriveMode = DriveMode.DRIVER_CONTROL;
 
+    // some other variables - not sure for what yet
+    // The coordinates we want the bot to automatically go to when we press the A button
+    Pose2d startPosition = new Pose2d(0, 60, Math.toRadians(360));
+    Vector2d targetAVector = new Vector2d(-24, 48);
+    Vector2d targetAVector2 = new Vector2d(0, 12);
+    // The heading we want the bot to end on for targetA
+    double targetAHeading = Math.toRadians(270);
+    double targetAHeading2 = Math.toRadians(360);
+
+
+    // All lift vars
     private DcMotorEx lift1;
     private DcMotorEx lift2;
-    private Servo grabberservo;
-    private Servo gripperfolder;
-
-    private DistanceSensor gripperHeight;
-    private DistanceSensor rightPole;
-    private DistanceSensor junctionSensor;
-
-    ElapsedTime durationTimer = new ElapsedTime();
-
-    ElapsedTime centeringTimer = new ElapsedTime();
-
-    final int ttolerance = 25;
-
-    double speedVal = 0.6;
-
     enum LiftMode {
         DRIVER_CONTROL, //player controlling it
         AUTOMATIC_CONTROL //Robot controlling it
     }
-    LiftMode currentLiftMode = LiftMode.DRIVER_CONTROL ;
-
     final int LIFT_LOW = -1000 ;
     final int LIFT_MEDIUM = -2000 ;
     final int LIFT_HIGH = -3300 ;
     final int LIFT_GROUND = -200 ;
+    LiftMode currentLiftMode = LiftMode.DRIVER_CONTROL ;
+    final int ttolerance = 25; // tolerance for lift encoding
+
+    // the servos
+    private Servo grabberservo;
+    private Servo gripperfolder;
+
+    // the sensors
+    private DistanceSensor gripperHeight;
+    private DistanceSensor rightPole;
+    private DistanceSensor junctionSensor;
+
+    // some timers and other auxillary vals
+    ElapsedTime durationTimer = new ElapsedTime();
+    ElapsedTime centeringTimer = new ElapsedTime();
+
+    // the different trajectories
+    Trajectory trajBack40 ;
+    Trajectory trajTurn180 ;
+    Trajectory trajForward40 ;
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -53,19 +79,12 @@ public class Qualifier2_TeleOp extends LinearOpMode {
         telemetry.addLine("reached");
         telemetry.update();
 
-        // setting up drive train
-        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
-        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
-        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
-        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
-
-        frontRight.setPower(0);
-        frontLeft.setPower(0);
-        backRight.setPower(0);
-        backLeft.setPower(0);
-
-        frontRight.setDirection(DcMotorEx.Direction.REVERSE);
-        backRight.setDirection(DcMotorEx.Direction.REVERSE);
+        drive = new SampleMecanumDriveCancelable(hardwareMap);
+        // the class sets up everything that is required including all the wheels
+        drive.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        // Retrieve our pose from the PoseStorage.currentPose static field
+        // See AutoTransferPose.java for further details
+        drive.setPoseEstimate(startPosition);
 
         // setting up the lift
         lift1 = hardwareMap.get(DcMotorEx.class, "lift1");
@@ -95,47 +114,72 @@ public class Qualifier2_TeleOp extends LinearOpMode {
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
         junctionSensor = hardwareMap.get(DistanceSensor.class, "junctionSensor");
 
+        // create all the trajectories
+        trajBack40 = drive.trajectoryBuilder(startPosition)
+                .back(40.0)
+                .build();
+
         waitForStart();
 
         durationTimer.reset();
 
         while (opModeIsActive()) {
 
-            // for the drive train
-            double y = gamepad1.left_stick_y; // Remember, this is reversed!
-            double x = gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
-            double rx = -gamepad1.right_stick_x * 0.75;
+            if (currentDriveMode == DriveMode.DRIVER_CONTROL) {
+                // for the drive train
+                double y = gamepad1.left_stick_y; // Remember, this is reversed!
+                double x = gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
+                double rx = -gamepad1.right_stick_x * 0.75;
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio, but only when
-            // at least one is out of  the range [-1, 1]
+                // Denominator is the largest motor power (absolute value) or 1
+                // This ensures all the powers maintain the same ratio, but only when
+                // at least one is out of  the range [-1, 1]
 
 
-            // Denominator is the largest motor power (absolute value) or 1
-            // This ensures all the powers maintain the same ratio, but only when
-            // at least one is out of the range [-1, 1]
-            double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
-            double frontLeftPower = (y + x + rx) / denominator;
-            double backLeftPower = (y - x + rx) / denominator;
-            double frontRightPower = (y - x - rx) / denominator;
-            double backRightPower = (y + x - rx) / denominator;
+                // Denominator is the largest motor power (absolute value) or 1
+                // This ensures all the powers maintain the same ratio, but only when
+                // at least one is out of the range [-1, 1]
+                double denominator = Math.max(Math.abs(y) + Math.abs(x) + Math.abs(rx), 1);
+                double frontLeftPower = (y + x + rx) / denominator;
+                double backLeftPower = (y - x + rx) / denominator;
+                double frontRightPower = (y - x - rx) / denominator;
+                double backRightPower = (y + x - rx) / denominator;
 
-            frontLeft.setPower(frontLeftPower * speedVal);
-            backLeft.setPower(backLeftPower * speedVal);
-            frontRight.setPower(frontRightPower * speedVal);
-            backRight.setPower(backRightPower * speedVal);
+                drive.setMotorPowers(frontLeftPower * speedVal,
+                        backLeftPower * speedVal,
+                        backRightPower * speedVal,
+                        frontRightPower * speedVal);
 
-            if (gamepad1.x) {
+                if (gamepad1.y) {
 
-                if (speedVal == 0.6) {
+                    if (speedVal == 0.6) {
 
-                    speedVal = 1.0;
+                        speedVal = 1.0;
 
-                } else {
+                    } else {
 
-                    speedVal = 0.6;
+                        speedVal = 0.6;
+                    }
                 }
 
+                // special motion
+                if (gamepad1.a) {
+                    drive.followTrajectoryAsync(trajBack40);
+                    currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
+                    // becomes automatic now
+                }
+
+            }
+            else { // drive mode is automatic
+                // If x is pressed, we break out of the automatic following
+                if (gamepad1.x) {
+                    drive.breakFollowing();
+                    currentDriveMode = DriveMode.DRIVER_CONTROL;
+                }
+                // If drive finishes its task, cede control to the driver
+                if (!drive.isBusy()) {
+                    currentDriveMode = DriveMode.DRIVER_CONTROL;
+                }
             }
 
             // check if lift is in DRIVER or AUTOMATED mode
@@ -221,36 +265,36 @@ public class Qualifier2_TeleOp extends LinearOpMode {
     }
 
     void moveLiftToPosition(int pos) {
-      int tposition = pos;
-      final int ttolerance = 25;
-      int thigher = tposition - ttolerance;
-      int tlower = tposition + ttolerance;
+        int tposition = pos;
+        final int ttolerance = 25;
+        int thigher = tposition - ttolerance;
+        int tlower = tposition + ttolerance;
 
-      lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-      lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift1.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        lift2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
 
-      lift1.setTargetPosition(tposition);
-      lift1.setTargetPositionTolerance(ttolerance);
-      lift2.setTargetPosition(tposition);
-      lift2.setTargetPositionTolerance(ttolerance);
+        lift1.setTargetPosition(tposition);
+        lift1.setTargetPositionTolerance(ttolerance);
+        lift2.setTargetPosition(tposition);
+        lift2.setTargetPositionTolerance(ttolerance);
 
-      lift1.setPower(1.0);
-      lift2.setPower(1.0);
+        lift1.setPower(1.0);
+        lift2.setPower(1.0);
 
-      while (true) {
-        int lift1position = lift1.getCurrentPosition();
-        int lift2position = lift2.getCurrentPosition();
+        while (true) {
+            int lift1position = lift1.getCurrentPosition();
+            int lift2position = lift2.getCurrentPosition();
 
-        if ( ((lift1position < tlower) && (lift1position > thigher)) ||
-                ((lift2position < tlower) && (lift2position > thigher)) ) {
+            if ( ((lift1position < tlower) && (lift1position > thigher)) ||
+                    ((lift2position < tlower) && (lift2position > thigher)) ) {
 
-          lift1.setPower(0.0);
-          lift2.setPower(0.0);
-          break;
+                lift1.setPower(0.0);
+                lift2.setPower(0.0);
+                break;
+            }
         }
-      }
 
-      // this is not async ; so keep it driver controlled
+        // this is not async ; so keep it driver controlled
         lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
         lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
         currentLiftMode = LiftMode.DRIVER_CONTROL ;
@@ -310,58 +354,23 @@ public class Qualifier2_TeleOp extends LinearOpMode {
     }
 
     void moveBackward(double speed) throws InterruptedException {
-        frontLeft.setPower(speed);
-        frontRight.setPower(speed);
-        backLeft.setPower(speed);
-        backRight.setPower(speed);
-
-
-
+        drive.setMotorPowers(-speed,-speed,-speed,-speed);
     }
 
     void moveForward(double speed) throws InterruptedException {
-        frontLeft.setPower(-speed);
-        frontRight.setPower(-speed);
-        backLeft.setPower(-speed);
-        backRight.setPower(-speed);
-
+        drive.setMotorPowers(speed,speed,speed,speed);
     }
 
     void moveLeft(double speed) throws InterruptedException {
-        frontLeft.setPower(speed);
-        frontRight.setPower(-speed);
-        backLeft.setPower(-speed);
-        backRight.setPower(speed);
-
-        /*
-        Thread.sleep(time);
-
-        frontLeft.setPower(0);
-        frontRight.setPower(0);
-        backLeft.setPower(0);
-        backRight.setPower(0);
-
-
-         */
-
-    }
-
-    void stopAllWheels() {
-
-        frontLeft.setPower(0.0);
-        frontRight.setPower(0.0);
-        backLeft.setPower(0.0);
-        backRight.setPower(0.0);
-
-
+        drive.setMotorPowers(-speed, speed, -speed, speed);
     }
 
     void moveRight(double speed) throws InterruptedException {
-        frontLeft.setPower(-speed);
-        frontRight.setPower(speed);
-        backLeft.setPower(speed);
-        backRight.setPower(-speed);
+        drive.setMotorPowers(speed, -speed, speed, -speed);
+    }
 
+    void stopAllWheels() {
+        drive.setMotorPowers(0,0,0,0);
     }
 
     /*
