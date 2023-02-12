@@ -215,7 +215,7 @@ public class States_RightAutonomous extends LinearOpMode {
                 .build();
 
         Trajectory traj4 = drive.trajectoryBuilder(traj3.end().plus(new Pose2d(0,0, Math.toRadians(-180))))
-                .strafeLeft(16.0)
+                .strafeLeft(18.0)
                 .build();
 
         Trajectory traj5 = drive.trajectoryBuilder(traj4.end())
@@ -260,13 +260,13 @@ public class States_RightAutonomous extends LinearOpMode {
                 // strafes left
                 traj2);
 
-        moveLiftToPositionAsync(-3800);
+        moveLiftToPositionAsync(-3600);
 
         drive.followTrajectory(
                 // goes to high junction and drops cone
                 traj3);
 
-        checkLiftInPositionAsync(-3800);
+        checkLiftInPositionAsync(-3600);
 
         Thread.sleep(50);
 
@@ -287,12 +287,9 @@ public class States_RightAutonomous extends LinearOpMode {
         Thread.sleep(250);
 
         gripperfolder.setPosition(1.0);
-        Thread.sleep(500);
+        Thread.sleep(1000);
         gripper.setPosition(0);
 
-
-        // implement junction automation here
-        //placeCone();
 
 
         drive.turn(Math.toRadians(-180));
@@ -324,7 +321,32 @@ public class States_RightAutonomous extends LinearOpMode {
 
         sleep(50);
 
-        moveLiftToPositionAsync(-1800);
+        moveLiftToPositionAsync(-3600);
+
+        drive.turn(Math.toRadians(135));
+
+        checkLiftInPositionAsync(-3600);
+
+        moveForwardRoadRunner(0.25);
+        while (junctionSensor.getDistance(DistanceUnit.INCH) > 2) {
+
+
+        }
+        stopAllWheelsRoadRunner();
+
+        moveBackwardRoadRunner(0.25);
+        while (junctionSensor.getDistance(DistanceUnit.INCH) < 9) {
+
+
+        }
+        stopAllWheelsRoadRunner();
+
+        Thread.sleep(250);
+
+        gripperfolder.setPosition(1.0);
+        Thread.sleep(1000);
+        gripper.setPosition(0);
+
 
         /*
 
