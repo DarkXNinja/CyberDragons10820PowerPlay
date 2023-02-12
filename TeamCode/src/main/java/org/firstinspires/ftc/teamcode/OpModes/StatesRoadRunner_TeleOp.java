@@ -116,7 +116,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
         // create all the trajectories
         trajBack40 = drive.trajectoryBuilder(startPosition)
-                .back(40.0)
+                .back(20.0)
                 .build();
 
         waitForStart();
@@ -164,11 +164,10 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
                 // special motion
                 if (gamepad1.a) {
-                    drive.followTrajectoryAsync(trajBack40);
+                    drive.followTrajectory(trajBack40);
                     currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
                     // becomes automatic now
                 }
-
             }
             else { // drive mode is automatic
                 // If x is pressed, we break out of the automatic following
