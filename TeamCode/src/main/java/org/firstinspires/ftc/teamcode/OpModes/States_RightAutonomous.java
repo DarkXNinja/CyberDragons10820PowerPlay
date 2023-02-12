@@ -12,7 +12,10 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.teamcode.OpenCV.AprilTagDetectionPipeline;
+import org.firstinspires.ftc.teamcode.OpenCV.JunctionPipeline;
+import org.firstinspires.ftc.teamcode.OpenCV.SimpleJunctionPipeline;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.DriveConstants;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDrive;
 import org.openftc.apriltag.AprilTagDetection;
@@ -27,7 +30,10 @@ public class States_RightAutonomous extends LinearOpMode {
 
 
     OpenCvCamera camera;
+    String webcamName = "Webcam 1";
+
     AprilTagDetectionPipeline aprilTagDetectionPipeline;
+    SimpleJunctionPipeline detector;
 
     static final double FEET_PER_METER = 3.28084;
 
@@ -57,16 +63,26 @@ public class States_RightAutonomous extends LinearOpMode {
     DcMotorEx lift1;
     DcMotorEx lift2;
 
+    //drivetrain motors
+    public DcMotorEx frontRight;
+    public DcMotorEx backRight;
+    public DcMotorEx frontLeft;
+    public DcMotorEx backLeft;
 
     private Servo gripper;
     private Servo gripperfolder;
 
     private DistanceSensor gripperHeight;
     private DistanceSensor rightPole;
+    private DistanceSensor junctionSensor;
 
-    SampleMecanumDrive drive ;
+
+    SampleMecanumDrive drive;
 
     ElapsedTime centeringTimer = new ElapsedTime();
+
+    public int avgX;
+    public int screenWidth = 320;
 
     /*
     5 - 650
@@ -92,7 +108,7 @@ public class States_RightAutonomous extends LinearOpMode {
         initializeRobot();
 
         int cameraMonitorViewId = hardwareMap.appContext.getResources().getIdentifier("cameraMonitorViewId", "id", hardwareMap.appContext.getPackageName());
-        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, "Webcam 1"), cameraMonitorViewId);
+        camera = OpenCvCameraFactory.getInstance().createWebcam(hardwareMap.get(WebcamName.class, webcamName), cameraMonitorViewId);
         aprilTagDetectionPipeline = new AprilTagDetectionPipeline(tagsize, fx, fy, cx, cy);
 
         camera.setPipeline(aprilTagDetectionPipeline);
@@ -177,8 +193,11 @@ public class States_RightAutonomous extends LinearOpMode {
             telemetry.update();
         }
 
+        initializeOpenCV();
 
         if (isStopRequested()) return;
+
+        camera.pauseViewport(); // this reduces CPU/battery load
 
         Trajectory traj1 = drive.trajectoryBuilder(startPose)
                 .forward(3.0)
@@ -231,6 +250,7 @@ public class States_RightAutonomous extends LinearOpMode {
                 )
                 .build();
 
+        camera.startStreaming(screenWidth, 240, OpenCvCameraRotation.UPRIGHT);
 
         drive.followTrajectory(
                 // moves forward
@@ -250,8 +270,30 @@ public class States_RightAutonomous extends LinearOpMode {
 
         Thread.sleep(50);
 
-        //open gripper
+        moveForwardRoadRunner(0.25);
+        while (junctionSensor.getDistance(DistanceUnit.INCH) > 2) {
+
+
+        }
+        stopAllWheelsRoadRunner();
+
+        moveBackwardRoadRunner(0.25);
+        while (junctionSensor.getDistance(DistanceUnit.INCH) < 9) {
+
+
+        }
+        stopAllWheelsRoadRunner();
+
+        Thread.sleep(250);
+
+        gripperfolder.setPosition(1.0);
+        Thread.sleep(500);
         gripper.setPosition(0);
+
+
+        // implement junction automation here
+        //placeCone();
+
 
         drive.turn(Math.toRadians(-180));
 
@@ -284,7 +326,9 @@ public class States_RightAutonomous extends LinearOpMode {
 
         moveLiftToPositionAsync(-1800);
 
-        drive.turn(Math.toRadians(-130));
+        /*
+
+        drive.turn(Math.toRadians(130));
 
         drive.followTrajectory(
                 //forward a little
@@ -367,6 +411,8 @@ public class States_RightAutonomous extends LinearOpMode {
 
 
         }
+
+         */
 
 
     }
@@ -501,10 +547,12 @@ public class States_RightAutonomous extends LinearOpMode {
         gripper.setPosition(1);
 
         gripperfolder = hardwareMap.get(Servo.class, "GripperFolder");
-        gripperfolder.setPosition(1.0);
+        gripperfolder.setPosition(0.0);
 
         gripperHeight = hardwareMap.get(DistanceSensor.class, "gripperHeight");
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
+        junctionSensor = hardwareMap.get(DistanceSensor.class, "junctionSensor");
+
 
         telemetry.addLine("Robot Initialized");
         telemetry.update();
@@ -577,162 +625,271 @@ public class States_RightAutonomous extends LinearOpMode {
             }
         }
     }
-/*
-    void moveBackward(double speed) throws InterruptedException {
-        frontLeft.setPower(speed);
-        frontRight.setPower(speed);
-        backLeft.setPower(speed);
-        backRight.setPower(speed);
 
+    void initializeOpenCV() {
+
+        detector = new SimpleJunctionPipeline();
+
+        this.camera.setPipeline(detector);
+
+    }
+
+    void initializeDrive() {
+
+        // setting up drive train
+        frontRight = hardwareMap.get(DcMotorEx.class, "frontRight");
+        frontLeft = hardwareMap.get(DcMotorEx.class, "frontLeft");
+        backRight = hardwareMap.get(DcMotorEx.class, "backRight");
+        backLeft = hardwareMap.get(DcMotorEx.class, "backLeft");
+
+        frontRight.setPower(0);
+        frontLeft.setPower(0);
+        backRight.setPower(0);
+        backLeft.setPower(0);
+
+        frontRight.setDirection(DcMotorEx.Direction.REVERSE);
+        backRight.setDirection(DcMotorEx.Direction.REVERSE);
+
+        frontRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backRight.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
+        frontRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backRight.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        frontLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        backLeft.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+
+    }
+
+    void initializeRoadRunner(Pose2d pose) {
+
+        drive = new SampleMecanumDrive(hardwareMap);
+        drive.setPoseEstimate(pose);
 
 
     }
 
-    void moveForward(double speed) throws InterruptedException {
-        frontLeft.setPower(-speed);
-        frontRight.setPower(-speed);
-        backLeft.setPower(-speed);
-        backRight.setPower(-speed);
+    void placeCone() {
+
+        centerRobotCamera();
+        sleep(5000);
+        // if centered successfully; then stop streaming
+        camera.stopStreaming();
+
+        adjustRobotDistance() ; // distance use sensor
+        //adjustRobotCameraDistance() ; // use camera for distance
+        sleep(5000);
+
+        // down and open gripper
+        downGripper();
+        sleep(500) ;
+        openGripper();
 
     }
 
-    void moveLeft(double speed) throws InterruptedException {
-        frontLeft.setPower(speed);
-        frontRight.setPower(-speed);
-        backLeft.setPower(-speed);
-        backRight.setPower(speed);
+    // function for checking if camera is within bounds
+    // 0 means it is centered
+    // <1 means it is to the left
+    // >1 means it is to the right
+    private int checkCameraWithinBounds () {
+        int midScreen = screenWidth/2 ;
+        int sTolerance = 10 ; // this is the number of pixels
+        int lmscreen = midScreen - sTolerance ;
+        int rmscreen = midScreen + sTolerance ;
 
+        avgX = (detector.maxWidth/2) + detector.x;
 
+        telemetry.addData("lmscreen:", " " + lmscreen + " rmscreen: " + rmscreen);
 
-    }
+        // displays bounding box info
+        telemetry.addData("\nWidth value:", " " + detector.maxWidth + " x value: " + detector.x + " avgX: " + avgX);
+        //telemetry.update();
 
-    void stopAllWheels() {
-
-        frontLeft.setPower(0.0);
-        frontRight.setPower(0.0);
-        backLeft.setPower(0.0);
-        backRight.setPower(0.0);
-
-
-    }
-
-    void moveRight(double speed) throws InterruptedException {
-        frontLeft.setPower(-speed);
-        frontRight.setPower(speed);
-        backLeft.setPower(speed);
-        backRight.setPower(-speed);
-
-
-    }
-
-    public boolean adjustRobotPositionToJunction() throws InterruptedException {
-
-        gripper.setPosition(1);
-
-
-        double rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
-        double leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
-
-        double maxPD = 12.0 ;
-
-        boolean angleGood = false;
-        boolean distGood = false ;
-
-        if ((rightDist < maxPD) && (leftDist < maxPD)) {
-            // then it is at a good angle relative to the junction
-            // we are good to go on angle
+        // if it is mostly centered then
+        if ((avgX >= lmscreen) && (avgX <= rmscreen)) {
+            return 0 ;
         } else {
-            if ((rightDist >= maxPD) && (leftDist <= maxPD)) {
+            if (avgX < lmscreen)
+                return (avgX - lmscreen) ;
+            else
+                return (avgX - rmscreen) ;
+        }
+    }
 
-                centeringTimer.reset();
-                while (centeringTimer.milliseconds() < 750) {
+    public void centerRobotCamera() {
 
-                    moveLeft(0.25);
-                    rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
-                    leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
-                    if ((rightDist < maxPD) && (leftDist < maxPD)) {
-                        angleGood = true ;
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset() ;
+
+        int rpos = checkCameraWithinBounds() ;
+        if (rpos == 0) {
+            telemetry.addData("Robot is ", "already centered.");
+            telemetry.update();
+            return;
+        }
+        else {
+            if (rpos < 0) {
+                telemetry.addData("Robot is ", "moving left.");
+                //telemetry.update();
+
+                // for some reason using timer is not working
+                timer.reset() ;
+                moveLeftRoadRunner(0.25);
+                while(timer.milliseconds() < 5000) {
+                    sleep(100); // this is extremely important to give the OpenCV thread to execute
+                    // need to call function
+                    if (checkCameraWithinBounds() == 0) {
+                        stopAllWheelsRoadRunner();
+                        telemetry.addData("Robot has", "reached center.");
+                        telemetry.update() ;
+                        break ;
+                    }
+                }
+                stopAllWheelsRoadRunner();
+
+            } else {
+                telemetry.addData("Robot is ", "moving right.");
+                //telemetry.update();
+
+
+                timer.reset() ;
+                moveRightRoadRunner(0.25);
+                while(timer.milliseconds() < 5000) {
+                    sleep(100);// this is extremely important to give the OpenCV thread to execute
+                    if (checkCameraWithinBounds() == 0) {
+                        stopAllWheelsRoadRunner();
+                        telemetry.addData("Robot has", "reached center.");
+                        telemetry.update() ;
+                        break ;
+                    }
+
+                }
+                stopAllWheelsRoadRunner();
+
+            }
+        }
+
+        telemetry.update() ;
+        stopAllWheelsRoadRunner();
+    }
+
+    private int checkCameraDistancetoJunction() {
+        int pwidth ;
+        // it should be within range from the junction pole
+        int minWidth = 55, maxWidth = 65;
+        pwidth = detector.maxWidth ;
+        if ((pwidth >= minWidth) && (pwidth <= maxWidth))
+            return 0;
+        else {
+            if (pwidth < minWidth) // too far
+                return -1 ;
+            else // too close
+                return 1;
+        }
+    }
+
+    private int checkDistancetoJunction() {
+        double pdist ;
+        // it should be within range from the junction pole
+        double minDist = 10.5, maxDist = 11.5;
+        pdist = junctionSensor.getDistance(DistanceUnit.INCH) ;
+        if ((pdist >= minDist) && (pdist <= maxDist))
+            return 0;
+        else {
+            if (pdist < minDist) // too close
+                return -1 ;
+            else // too far
+                return 1;
+        }
+    }
+
+    public void adjustRobotDistance() {
+
+        ElapsedTime timer = new ElapsedTime();
+        timer.reset() ;
+
+        int retdist = checkDistancetoJunction() ;
+
+        if ( retdist == 0) {
+            // nothing else to do
+        } else {
+            if (retdist < 0) {
+                timer.reset();
+                moveBackwardRoadRunner(0.2);
+                while (timer.milliseconds() < 5000) {
+                    if (checkDistancetoJunction() == 0) {
+                        stopAllWheelsRoadRunner();
+                        telemetry.addData("Robot is", "good distance from junction.");
+                        telemetry.update();
                         break;
                     }
 
-
                 }
-                stopAllWheels();
+                stopAllWheelsRoadRunner();
 
-                if (!angleGood) {
-                    // we tried a lot and didnt succeed, so we give up
-                    return false;
-                }
             } else {
-                if ((leftDist >= maxPD) && (rightDist <= maxPD)) {
-
-                    centeringTimer.reset();
-                    while (centeringTimer.milliseconds() < 750) {
-
-                        moveRight( 0.25);
-
-                        rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
-                        leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
-                        if ((rightDist < maxPD) && (leftDist < maxPD)) {
-                            angleGood = true ;
-                            break;
-                        }
-
+                timer.reset();
+                moveForwardRoadRunner(0.2);
+                while (timer.milliseconds() < 5000) {
+                    if (checkDistancetoJunction() == 0) {
+                        stopAllWheelsRoadRunner();
+                        telemetry.addData("Robot is", "good distance from junction.");
+                        telemetry.update();
+                        break;
                     }
 
-                    stopAllWheels();
-
-                    if (!angleGood)
-                        return false ;
-
-                } else {
-                    // Neither of the sensors have provided reasonable values
-                    // so abort
-                    return false ;
                 }
+                stopAllWheelsRoadRunner();
             }
-        } // else for both being not close
-
-        // if it has reached here, then we know that it is at a good angle relative to junction
-        telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
-        telemetry.addLine("pole distance left: " + leftPole.getDistance(DistanceUnit.INCH));
-        telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
-
-        telemetry.addLine("lift1 encoder: " + lift1.getCurrentPosition());
-        telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
-        telemetry.update();
-        Thread.sleep(1000);
-
-        // now adjust for distance from the junction
-        // if it is too close then it wont work properly because of the grabber folder
-        if ((rightDist < maxPD) && (leftDist < maxPD)) {
-
-            centeringTimer.reset();
-            while (centeringTimer.milliseconds() < 750) {
-
-                moveBackward(0.25);
-
-                rightDist = rightPole.getDistance(DistanceUnit.INCH) ;
-                leftDist = leftPole.getDistance(DistanceUnit.INCH) ;
-                if ((rightDist > 9) && (leftDist > 9)) {
-                    stopAllWheels();
-                    distGood = true ;
-                    break;
-                }
-
-            }
-
-
-            if (!distGood)
-                return false ;
-
         }
+    }
 
-        return true ;
+    private void openGripper() {
+        gripper.setPosition(0); // open gripper
+    }
+    private void closeGripper() {
+        gripper.setPosition(1); // close gripper
+    }
+    private void upGripper() {
+        gripperfolder.setPosition(0); // up gripper
+    }
+    private void downGripper() {
+        gripperfolder.setPosition(1); // down gripper
+    }
+
+    void moveBackwardRoadRunner(double speed) {
+
+        drive.setMotorPowers(-speed, -speed, -speed, -speed);
+
+    }
+
+
+    void moveForwardRoadRunner(double speed) {
+
+        drive.setMotorPowers(speed, speed, speed, speed);
+
+    }
+
+    void moveRightRoadRunner(double speed) {
+
+        drive.setMotorPowers(speed, -speed, speed, -speed);
+    }
+
+
+    void moveLeftRoadRunner(double speed)  {
+
+        drive.setMotorPowers(-speed, speed, -speed, speed);
+
+    }
+
+    void stopAllWheelsRoadRunner() {
+
+        drive.setMotorPowers(0, 0, 0, 0);
 
 
     }
 
-    */
+
 
 }
