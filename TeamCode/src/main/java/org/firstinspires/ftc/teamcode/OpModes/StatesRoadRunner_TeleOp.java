@@ -13,6 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDriveCancelable;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.trajectorysequence.TrajectorySequenceBuilder;
 
 
 // This is essentially Qualifier2_TeleOp
@@ -33,7 +34,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
     // some other variables - not sure for what yet
     // The coordinates we want the bot to automatically go to when we press the A button
-    Pose2d startPosition = new Pose2d(0, 60, Math.toRadians(360));
+    Pose2d startPosition = new Pose2d(0, 0, Math.toRadians(270));
     Vector2d targetAVector = new Vector2d(-24, 48);
     Vector2d targetAVector2 = new Vector2d(0, 12);
     // The heading we want the bot to end on for targetA
@@ -69,8 +70,9 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
     ElapsedTime centeringTimer = new ElapsedTime();
 
     // the different trajectories
+    TrajectorySequenceBuilder trajSeq1 ;
     Trajectory trajBack40 ;
-    Trajectory trajTurn180 ;
+    Trajectory trajRightTurn180 ;
     Trajectory trajForward40 ;
 
     @Override
@@ -116,8 +118,13 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
         // create all the trajectories
         trajBack40 = drive.trajectoryBuilder(startPosition)
-                .back(20.0)
+                .back(40.0)
                 .build();
+        trajForward40 = drive.trajectoryBuilder(trajBack40.end())
+                .forward(40.0)
+                .build();
+        trajSeq1 = drive.trajectorySequenceBuilder(startPosition) ;
+
 
         waitForStart();
 
@@ -125,11 +132,13 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
         while (opModeIsActive()) {
 
+            drive.update();
+
             if (currentDriveMode == DriveMode.DRIVER_CONTROL) {
                 // for the drive train
-                double y = gamepad1.left_stick_y; // Remember, this is reversed!
-                double x = gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
-                double rx = -gamepad1.right_stick_x * 0.75;
+                double y = -gamepad1.left_stick_y; // Remember, stick X and Y is reversed, so correct it can be used in roadrunner without confusion
+                double x = -gamepad1.left_stick_x * -1.1; // Counteract imperfect strafing
+                double rx = gamepad1.right_stick_x * 0.75;
 
                 // Denominator is the largest motor power (absolute value) or 1
                 // This ensures all the powers maintain the same ratio, but only when
@@ -164,7 +173,11 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
                 // special motion
                 if (gamepad1.a) {
-                    drive.followTrajectory(trajBack40);
+                    drive.followTrajectoryAsync(trajBack40);
+                    drive.followTrajectoryAsync(trajForward40);
+                    //drive.update();
+                    //drive.turnAsync(Math.toRadians(-180));
+                    // drop cone and reverse
                     currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
                     // becomes automatic now
                 }

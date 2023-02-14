@@ -83,7 +83,6 @@ public class States_RightAutonomous extends LinearOpMode {
 
     public int avgX;
     public int screenWidth = 320;
-
     /*
     5 - 650
     4 - 450
@@ -91,7 +90,6 @@ public class States_RightAutonomous extends LinearOpMode {
     2 - 125
     1 - 0
      */
-
 
 
     @Override
@@ -193,12 +191,7 @@ public class States_RightAutonomous extends LinearOpMode {
             telemetry.update();
         }
 
-        initializeOpenCV();
-
-        if (isStopRequested()) return;
-
-        camera.pauseViewport(); // this reduces CPU/battery load
-
+        // create all trajectories before start is pressed ; reduces time spent in autonomous
         Trajectory traj1 = drive.trajectoryBuilder(startPose)
                 .forward(3.0)
                 .build();
@@ -250,6 +243,14 @@ public class States_RightAutonomous extends LinearOpMode {
                 )
                 .build();
 
+
+        // initialize OpenCV with junction pipeline; given the detection of April Tags is already complete
+        initializeOpenCV();
+
+        if (isStopRequested()) return;
+
+        camera.pauseViewport(); // this reduces CPU/battery load
+
         camera.startStreaming(screenWidth, 240, OpenCvCameraRotation.UPRIGHT);
 
         drive.followTrajectory(
@@ -271,16 +272,16 @@ public class States_RightAutonomous extends LinearOpMode {
         Thread.sleep(50);
 
         moveForwardRoadRunner(0.25);
-        while (junctionSensor.getDistance(DistanceUnit.INCH) > 2) {
-
-
+        centeringTimer.reset();
+        while ((junctionSensor.getDistance(DistanceUnit.INCH) > 2) && (centeringTimer.milliseconds() < 3000)) {
+            // keep moving forward until it get close to the bare junction until a certain time
         }
         stopAllWheelsRoadRunner();
 
         moveBackwardRoadRunner(0.25);
-        while (junctionSensor.getDistance(DistanceUnit.INCH) < 9) {
-
-
+        centeringTimer.reset();
+        while ((junctionSensor.getDistance(DistanceUnit.INCH) < 9) && ((centeringTimer.milliseconds() < 5000))) {
+            // keep moving back till we are a distance away from the junction, but only until a certain time
         }
         stopAllWheelsRoadRunner();
 
