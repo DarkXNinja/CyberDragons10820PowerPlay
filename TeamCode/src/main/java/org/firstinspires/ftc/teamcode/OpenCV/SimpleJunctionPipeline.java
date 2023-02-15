@@ -87,6 +87,8 @@ public class SimpleJunctionPipeline extends OpenCvPipeline {
             maxHeight = boundRect[index].height;
         }
 
+         
+
         return thresh;
     }
 

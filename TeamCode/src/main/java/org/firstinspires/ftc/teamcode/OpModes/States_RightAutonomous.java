@@ -222,36 +222,17 @@ public class States_RightAutonomous extends LinearOpMode {
                 )
                 .build();
 
-        Trajectory traj7 = drive.trajectoryBuilder(traj6.end().plus(new Pose2d(0,0, Math.toRadians(-130))))
-                .forward(1.0,
-                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
-                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
+        Trajectory traj7 = drive.trajectoryBuilder(traj6.end())
+                .back(6.0)
                 .build();
 
-        Trajectory traj8 = drive.trajectoryBuilder(traj7.end())
-                .back(2.0,
-                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
-                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
+        Trajectory traj8 = drive.trajectoryBuilder(new Pose2d(0,0, Math.toRadians(180)))
+                .strafeRight(6.0)
                 .build();
-
-        Trajectory traj9 = drive.trajectoryBuilder(traj8.end().plus(new Pose2d(0,0, Math.toRadians(135))))
-                .forward(2.0,
-                        SampleMecanumDrive.getVelocityConstraint(slowerVel2, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
-                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
-                )
-                .build();
-
-
-        // initialize OpenCV with junction pipeline; given the detection of April Tags is already complete
-        initializeOpenCV();
 
         if (isStopRequested()) return;
 
         camera.pauseViewport(); // this reduces CPU/battery load
-
-        camera.startStreaming(screenWidth, 240, OpenCvCameraRotation.UPRIGHT);
 
         drive.followTrajectory(
                 // moves forward
@@ -261,13 +242,13 @@ public class States_RightAutonomous extends LinearOpMode {
                 // strafes left
                 traj2);
 
-        moveLiftToPositionAsync(-3600);
+        moveLiftToPositionAsync(-3500);
 
         drive.followTrajectory(
                 // goes to high junction and drops cone
                 traj3);
 
-        checkLiftInPositionAsync(-3600);
+        checkLiftInPositionAsync(-3500);
 
         Thread.sleep(50);
 
@@ -292,20 +273,19 @@ public class States_RightAutonomous extends LinearOpMode {
         gripper.setPosition(0);
 
 
-
+        gripperfolder.setPosition(0.0);
         drive.turn(Math.toRadians(-180));
-
-        moveLiftToPositionAsync(-650);
+        moveLiftToPositionAsync(-500);
+        checkLiftInPositionAsync(-500);
 
         drive.followTrajectory(
                 // strafes left
                 traj4);
 
+        gripperfolder.setPosition(1.0);
         drive.followTrajectory(
                 //goes to starter stack #1
                 traj5);
-
-        checkLiftInPositionAsync(-650);
 
         // cone 1
         gripper.setPosition(1.0);
@@ -322,23 +302,28 @@ public class States_RightAutonomous extends LinearOpMode {
 
         sleep(50);
 
-        moveLiftToPositionAsync(-3600);
+        moveLiftToPositionAsync(-3500);
+        gripperfolder.setPosition(0.0);
 
-        drive.turn(Math.toRadians(135));
+        drive.followTrajectory(
+                //back some more
+                traj7);
 
-        checkLiftInPositionAsync(-3600);
+        drive.turn(Math.toRadians(165));
+
+        checkLiftInPositionAsync(-3500);
 
         moveForwardRoadRunner(0.25);
-        while (junctionSensor.getDistance(DistanceUnit.INCH) > 2) {
-
-
+        centeringTimer.reset();
+        while ((junctionSensor.getDistance(DistanceUnit.INCH) > 2) && (centeringTimer.milliseconds() < 3000)) {
+            // keep moving forward until it get close to the bare junction until a certain time
         }
         stopAllWheelsRoadRunner();
 
         moveBackwardRoadRunner(0.25);
-        while (junctionSensor.getDistance(DistanceUnit.INCH) < 9) {
-
-
+        centeringTimer.reset();
+        while ((junctionSensor.getDistance(DistanceUnit.INCH) < 9) && ((centeringTimer.milliseconds() < 5000))) {
+            // keep moving back till we are a distance away from the junction, but only until a certain time
         }
         stopAllWheelsRoadRunner();
 
@@ -348,85 +333,29 @@ public class States_RightAutonomous extends LinearOpMode {
         Thread.sleep(1000);
         gripper.setPosition(0);
 
-
-        /*
-
-        drive.turn(Math.toRadians(130));
+        drive.turn(Math.toRadians(-165));
 
         drive.followTrajectory(
-                //forward a little
-                traj7);
-
-        gripper.setPosition(0);
-
-        Thread.sleep(250);
-
-        drive.followTrajectory(
-                //backward a little
+                //strafes right to parking zones
                 traj8);
-
-        drive.turn(Math.toRadians(135));
-
-        // cone 2
-        moveLiftToPositionAsync(-450);
-        checkLiftInPositionAsync(-450);
-
-        Thread.sleep(250);
-
-        drive.followTrajectory(
-                //forward a little
-                traj9);
-
-
-        gripper.setPosition(1.0);
-
-        gripper.setPosition(1.0);
-        Thread.sleep(250);
-
-        moveLiftToPositionAsync(-1000);
-        drive.followTrajectory(
-                //takes cone #2
-                traj6);
-
-        checkLiftInPositionAsync(-1000);
-
-        sleep(50);
-
-        moveLiftToPositionAsync(-1800);
-
-        drive.turn(Math.toRadians(-130));
-
-        drive.followTrajectory(
-                //forward a little
-                traj7);
-
-        gripper.setPosition(0);
-
-        Thread.sleep(250);
-
-        drive.followTrajectory(
-                //backward a little
-                traj8);
-
-        drive.turn(Math.toRadians(-45));
 
         // Actually do something useful
-        if (tagOfInterest == null || tagOfInterest.id == MIDDLE) {
+        if (tagOfInterest == null || tagOfInterest.id == LEFT) {
 
 
-            Trajectory zone2 = drive.trajectoryBuilder(traj8.end().plus(new Pose2d(0,0, Math.toRadians(-45))))
+            Trajectory zone3 = drive.trajectoryBuilder(new Pose2d(0,0, Math.toRadians(180)))
                     .forward(12.0)
                     .build();
 
-            drive.followTrajectory(zone2);
+            drive.followTrajectory(zone3);
 
 
 
-        } else if (tagOfInterest.id == LEFT) {
+        } else if (tagOfInterest.id == RIGHT) {
 
 
-            Trajectory zone1 = drive.trajectoryBuilder(traj8.end().plus(new Pose2d(0,0, Math.toRadians(-45))))
-                    .forward(24.0)
+            Trajectory zone1 = drive.trajectoryBuilder(new Pose2d(0,0, Math.toRadians(180)))
+                    .back(12.0)
                     .build();
 
             drive.followTrajectory(zone1);
@@ -434,8 +363,6 @@ public class States_RightAutonomous extends LinearOpMode {
 
 
         }
-
-         */
 
 
     }
