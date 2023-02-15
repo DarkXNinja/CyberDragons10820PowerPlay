@@ -13,7 +13,7 @@ import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.drive.SampleMecanumDriveCancelable;
-import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.trajectorysequence.TrajectorySequenceBuilder;
+import org.firstinspires.ftc.teamcode.RoadRunnerConfiguration.trajectorysequence.TrajectorySequence;
 
 
 // This is essentially Qualifier2_TeleOp
@@ -70,7 +70,8 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
     ElapsedTime centeringTimer = new ElapsedTime();
 
     // the different trajectories
-    TrajectorySequenceBuilder trajSeq1 ;
+    TrajectorySequence trajSeq1, trajSeq2 ;
+    // no need to use individual trajectories
     Trajectory trajBack40 ;
     Trajectory trajRightTurn180 ;
     Trajectory trajForward40 ;
@@ -116,15 +117,56 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
         rightPole = hardwareMap.get(DistanceSensor.class, "rightPole");
         junctionSensor = hardwareMap.get(DistanceSensor.class, "junctionSensor");
 
-        // create all the trajectories
+        // create all the trajectory sequences
+        trajSeq1 = drive.trajectorySequenceBuilder(startPosition)
+                .back(40.0)
+                .turn(Math.toRadians(-175)) // to reduce ambiguity about 180; which way to turn??
+                .addTemporalMarker(3, () -> {
+                    downGripper();
+                })
+                .addTemporalMarker(3.5,() -> {
+                    openGripper();
+                })
+                .waitSeconds(2)
+                .addTemporalMarker(4, () -> {
+                    upGripper();
+                })
+                .turn(Math.toRadians(175))
+                .forward(40.0)
+                .build() ;
+
+        trajSeq2 = drive.trajectorySequenceBuilder(startPosition)
+                .strafeRight(40.0)
+                .forward(4)
+                .addTemporalMarker(0.1, () -> {
+                    moveLiftToPositionAsync(LIFT_HIGH); // high junction
+                })
+                .addTemporalMarker(5, () -> {
+                    downGripper();
+                })
+                .addTemporalMarker(6,() -> {
+                    openGripper();
+                })
+                .waitSeconds(4)
+                .addTemporalMarker(6.5, () -> {
+                    upGripper();
+                })
+                .addTemporalMarker(7, () -> {
+                    moveLiftToPositionAsync(LIFT_GROUND); // ground junction
+                })
+                .back(4.0)
+                .strafeLeft(40.0)
+                .build();
+
+        /*
+        // not required to create separate trajectories any more
         trajBack40 = drive.trajectoryBuilder(startPosition)
                 .back(40.0)
                 .build();
         trajForward40 = drive.trajectoryBuilder(trajBack40.end())
                 .forward(40.0)
                 .build();
-        trajSeq1 = drive.trajectorySequenceBuilder(startPosition) ;
-
+        */
 
         waitForStart();
 
@@ -173,11 +215,14 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
                 // special motion
                 if (gamepad1.a) {
-                    drive.followTrajectoryAsync(trajBack40);
-                    drive.followTrajectoryAsync(trajForward40);
-                    //drive.update();
-                    //drive.turnAsync(Math.toRadians(-180));
-                    // drop cone and reverse
+                    drive.followTrajectorySequenceAsync(trajSeq1);
+                    //drive.followTrajectoryAsync(trajBack40); // example trajectory
+                    currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
+                    // becomes automatic now
+                }
+                if (gamepad1.b) {
+                    drive.followTrajectorySequenceAsync(trajSeq2);
+                    //drive.followTrajectoryAsync(trajBack40); // example trajectory
                     currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
                     // becomes automatic now
                 }
