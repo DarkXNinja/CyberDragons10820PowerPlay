@@ -201,7 +201,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
                         backRightPower * speedVal,
                         frontRightPower * speedVal);
 
-                if (gamepad1.y) {
+                if (gamepad1.dpad_up) {
 
                     if (speedVal == 0.6) {
 
@@ -214,18 +214,21 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
                 }
 
                 // special motion
-                if (gamepad1.a) {
+                if (gamepad1.y) {
                     drive.followTrajectorySequenceAsync(trajSeq1);
                     //drive.followTrajectoryAsync(trajBack40); // example trajectory
                     currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
                     // becomes automatic now
                 }
+                /*
                 if (gamepad1.b) {
                     drive.followTrajectorySequenceAsync(trajSeq2);
                     //drive.followTrajectoryAsync(trajBack40); // example trajectory
                     currentDriveMode = DriveMode.AUTOMATIC_CONTROL;
                     // becomes automatic now
                 }
+
+                 */
             }
             else { // drive mode is automatic
                 // If x is pressed, we break out of the automatic following
