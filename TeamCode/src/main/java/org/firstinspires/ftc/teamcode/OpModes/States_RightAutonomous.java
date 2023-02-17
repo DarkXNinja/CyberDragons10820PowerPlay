@@ -204,10 +204,6 @@ public class States_RightAutonomous extends LinearOpMode {
                 .lineToLinearHeading(new Pose2d(-11, 26, Math.toRadians(360)))
                 .build();
 
-        //
-        //                        SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
-        //                        SampleMecanumDrive.getAccelerationConstraint(DriveConstants.MAX_ACCEL)
-        //
         Trajectory traj4 = drive.trajectoryBuilder(traj3.end().plus(new Pose2d(0,0, Math.toRadians(-180))))
                 .strafeLeft(18.0)
                 .build();
@@ -337,16 +333,17 @@ public class States_RightAutonomous extends LinearOpMode {
         drive.turn(Math.toRadians(-165));
         moveLiftToPositionAsync(0);
 
-        moveRightRoadRunner(0.75);
-        Thread.sleep(350);
+        moveRightRoadRunner(0.5);
+        Thread.sleep(500);
         stopAllWheelsRoadRunner();
 
-        Thread.sleep(250);
+        Thread.sleep(500);
         checkLiftInPositionAsync(0);
 
         // Actually do something useful
         if (tagOfInterest == null || tagOfInterest.id == LEFT) {
 
+            /*
             Trajectory zone3 = drive.trajectoryBuilder(new Pose2d(0,0, Math.toRadians(180)))
                     .forward(8.0,
                             SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
@@ -356,11 +353,16 @@ public class States_RightAutonomous extends LinearOpMode {
 
             drive.followTrajectory(zone3);
 
+             */
+            moveForwardRoadRunner(0.5);
+            Thread.sleep(750);
+            stopAllWheelsRoadRunner();
+
 
 
         } else if (tagOfInterest.id == RIGHT) {
 
-
+/*
             Trajectory zone1 = drive.trajectoryBuilder(new Pose2d(0,0, Math.toRadians(180)))
                     .back(8.0,
                             SampleMecanumDrive.getVelocityConstraint(slowerVel, DriveConstants.MAX_ANG_VEL, DriveConstants.TRACK_WIDTH),
@@ -369,6 +371,12 @@ public class States_RightAutonomous extends LinearOpMode {
                     .build();
 
             drive.followTrajectory(zone1);
+
+
+ */
+            moveBackwardRoadRunner(0.5);
+            Thread.sleep(750);
+            stopAllWheelsRoadRunner();
 
 
 

@@ -52,7 +52,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
     final int LIFT_LOW = -1000 ;
     final int LIFT_MEDIUM = -2000 ;
     final int LIFT_HIGH = -3300 ;
-    final int LIFT_GROUND = -200 ;
+    final int LIFT_GROUND = -25 ;
     LiftMode currentLiftMode = LiftMode.DRIVER_CONTROL ;
     final int ttolerance = 25; // tolerance for lift encoding
 
@@ -246,7 +246,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
             if (currentLiftMode == LiftMode.DRIVER_CONTROL) {
                 // NOTE:Y-axis of the joysticks is negative when pushed up, and positive when pushed down
                 if (gamepad2.left_stick_y > 0) {
-                    if (gripperHeight.getDistance(DistanceUnit.INCH) > 1.5) {
+                    if (gripperHeight.getDistance(DistanceUnit.INCH) > 2.5) {
 
                         lift1.setPower(gamepad2.left_stick_y * 0.75);
                         lift2.setPower(gamepad2.left_stick_y * 0.75);
@@ -262,9 +262,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
             }
 
             // bumper can be used to get reset lift or get it out of AUTO mode
-            if (gamepad1.right_bumper){
-                resetLiftEncoder();
-            }
+
             if (gamepad1.left_bumper) {
                 exitLiftAutomatic();
             }
@@ -284,8 +282,8 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
                 moveLiftToPositionAsync(LIFT_HIGH); // high junction
             }
 
-            if (gamepad2.dpad_left) {
-                moveLiftToPositionAsync(LIFT_GROUND); // ground junction
+            if (gamepad2.dpad_left){
+                moveLiftToPositionAsync(LIFT_GROUND); // high junction
             }
 
             // Then then grabber
@@ -304,8 +302,6 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
                 upGripper();
             }
 
-/*
-            if (durationTimer.milliseconds() > 1000) {
                 telemetry.addLine("Height: " + gripperHeight.getDistance(DistanceUnit.INCH));
                 telemetry.addLine("pole distance right: " + rightPole.getDistance(DistanceUnit.INCH));
                 telemetry.addLine("junction distance" + junctionSensor.getDistance(DistanceUnit.INCH));
@@ -314,11 +310,9 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
                 telemetry.addLine("lift2 encoder: " + lift2.getCurrentPosition());
 
                 telemetry.update();
-                // reset timer
-                durationTimer.reset();
-            }
 
- */
+
+
 
         }
 
@@ -366,9 +360,9 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
         lift1.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
         lift2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // really important if using normal mode
 
-        lift1.setPower(0.5);
-        lift2.setPower(0.5);
-        while (gripperHeight.getDistance(DistanceUnit.INCH) > 1.5) {
+        lift1.setPower(0.75);
+        lift2.setPower(0.75);
+        while (gripperHeight.getDistance(DistanceUnit.INCH) > 2.5) {
 
         }
         lift1.setPower(0.0);
