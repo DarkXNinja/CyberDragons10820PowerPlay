@@ -205,7 +205,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
 
                     if (speedVal == 0.6) {
 
-                        speedVal = 1.0;
+                        speedVal = 0.25;
 
                     } else {
 
@@ -267,6 +267,10 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
                 exitLiftAutomatic();
             }
 
+            if (gamepad1.right_bumper) {
+                resetLiftEncoder();
+            }
+
             // then for the different junction heights
             // Note sync functions being used
             // exitAutomatic or resetGripper to get to driver control
@@ -283,7 +287,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
             }
 
             if (gamepad2.dpad_left){
-                moveLiftToPositionAsync(LIFT_GROUND); // high junction
+                moveLiftToPositionAsync(LIFT_GROUND); // start position
             }
 
             // Then then grabber
