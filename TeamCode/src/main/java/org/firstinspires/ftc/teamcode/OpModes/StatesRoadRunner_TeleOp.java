@@ -25,7 +25,7 @@ public class StatesRoadRunner_TeleOp extends LinearOpMode {
     // all drive vars here
     //use the Cancellable RoadRunner and put all variables on this here
     SampleMecanumDriveCancelable drive;
-    double speedVal = 0.6;
+    double speedVal = 0.75;
     enum DriveMode {
         DRIVER_CONTROL, //player controlling it
         AUTOMATIC_CONTROL //Robot controlling it
